@@ -33,7 +33,7 @@ public class GoogleApiHelper {
     public static HttpRequestFactory createRequestFactory(String accessToken) throws GeneralSecurityException, IOException {
         HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
         GsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-
+        System.out.println();
         return httpTransport.createRequestFactory(request -> {
             request.setParser(new JsonObjectParser(jsonFactory));
             request.getHeaders().setAuthorization("Bearer " + accessToken);

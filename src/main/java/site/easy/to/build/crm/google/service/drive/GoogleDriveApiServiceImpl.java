@@ -29,27 +29,55 @@ public class  GoogleDriveApiServiceImpl implements GoogleDriveApiService {
 
     @Override
     public List<GoogleDriveFile> listFiles(OAuthUser oAuthUser) throws IOException, GeneralSecurityException {
-
         String accessToken = oAuthUserService.refreshAccessTokenIfNeeded(oAuthUser);
         HttpRequestFactory httpRequestFactory = GoogleApiHelper.createRequestFactory(accessToken);
-
-        HashMap<String,String> queryParams = new HashMap<>();
-        queryParams.put("q", "mimeType != 'application/vnd.google-apps.folder'");
-        queryParams.put("fields","nextPageToken,files(id,name,mimeType,webViewLink,createdTime)");
-
-        GenericUrl driveUrl = GoogleApiHelper.buildGenericUrl(API_BASE_URL,queryParams);
-        System.out.println("DRIVE URL : " + driveUrl.build());
-        HttpRequest request = httpRequestFactory.buildGetRequest(driveUrl);
-        HttpResponse response = request.execute();
-        String respondBody = response.parseAsString();
         Gson gson = new Gson();
-        JsonObject jsonResponse = gson.fromJson(respondBody, JsonObject.class);
-        JsonArray filesArray = jsonResponse.getAsJsonArray("files");
-        System.out.println("FILES ARRAY : " + filesArray.toString());
-        Type fileListType = new TypeToken<List<GoogleDriveFile>>() {}.getType();
+        List<GoogleDriveFile> allFiles = new ArrayList<>();
+        String nextPageToken = null;
 
-        return gson.fromJson(filesArray, fileListType);
+        do {
+            HashMap<String, String> queryParams = new HashMap<>();
+            queryParams.put("q", "mimeType != 'application/vnd.google-apps.folder' and trashed = false");
+            queryParams.put("fields", "nextPageToken,files(id,name,mimeType,webViewLink,createdTime,modifiedTime,size,parents,shared,driveId)");
+            queryParams.put("orderBy", "createdTime desc");
+            queryParams.put("pageSize", "1000");
+            queryParams.put("includeItemsFromAllDrives", "true");
+            queryParams.put("supportsAllDrives", "true");
+            queryParams.put("corpora", "allDrives");
 
+            if(nextPageToken != null) {
+                queryParams.put("pageToken", nextPageToken);
+            }
+
+            GenericUrl driveUrl = new GenericUrl(API_BASE_URL);
+            driveUrl.putAll(queryParams);
+            System.out.println(oAuthUser.getAccessToken());
+            System.out.println(driveUrl.build());
+
+            HttpRequest request = httpRequestFactory.buildGetRequest(driveUrl);
+            HttpResponse response = request.execute();
+
+            JsonObject jsonResponse = gson.fromJson(response.parseAsString(), JsonObject.class);
+
+            // Gestion des erreurs
+            if(jsonResponse.has("error")) {
+                JsonObject error = jsonResponse.getAsJsonObject("error");
+                throw new IOException("Google API Error: " + error.get("code") + " - " + error.get("message"));
+            }
+
+            JsonArray filesArray = jsonResponse.getAsJsonArray("files");
+            Type fileListType = new TypeToken<List<GoogleDriveFile>>(){}.getType();
+            List<GoogleDriveFile> pageFiles = gson.fromJson(filesArray, fileListType);
+            allFiles.addAll(pageFiles);
+
+            nextPageToken = jsonResponse.has("nextPageToken") ?
+                    jsonResponse.get("nextPageToken").getAsString() :
+                    null;
+            System.out.println("Next page token:"+nextPageToken);
+
+        } while(nextPageToken != null);
+
+        return allFiles;
     }
 
     @Override
