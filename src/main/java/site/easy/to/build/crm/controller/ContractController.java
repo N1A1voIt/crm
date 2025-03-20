@@ -257,7 +257,7 @@ public class ContractController {
         Contract createdContract = contractService.save(contract);
         fileUtil.saveFiles(allFiles, createdContract);
 
-        if (contract.getGoogleDrive() != null) {
+        if (contract.getGoogleDrive() != null && folderId!=null) {
             fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdContract);
         }
 

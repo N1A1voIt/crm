@@ -38,13 +38,14 @@ public class  GoogleDriveApiServiceImpl implements GoogleDriveApiService {
         queryParams.put("fields","nextPageToken,files(id,name,mimeType,webViewLink,createdTime)");
 
         GenericUrl driveUrl = GoogleApiHelper.buildGenericUrl(API_BASE_URL,queryParams);
+        System.out.println("DRIVE URL : " + driveUrl.build());
         HttpRequest request = httpRequestFactory.buildGetRequest(driveUrl);
         HttpResponse response = request.execute();
         String respondBody = response.parseAsString();
         Gson gson = new Gson();
         JsonObject jsonResponse = gson.fromJson(respondBody, JsonObject.class);
         JsonArray filesArray = jsonResponse.getAsJsonArray("files");
-
+        System.out.println("FILES ARRAY : " + filesArray.toString());
         Type fileListType = new TypeToken<List<GoogleDriveFile>>() {}.getType();
 
         return gson.fromJson(filesArray, fileListType);
