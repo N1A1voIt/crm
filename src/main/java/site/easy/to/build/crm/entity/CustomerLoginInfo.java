@@ -41,6 +41,18 @@ public class CustomerLoginInfo {
         this.customer = customer;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public Boolean getPasswordSet() {
+        return passwordSet;
+    }
+
     public Integer getId() {
         return id;
     }
