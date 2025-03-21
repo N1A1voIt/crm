@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface TemporaryCSVTableInterface {
     void createTemporaryTable();
-    List<Exception> controlCSV(List<String> lines,String entityName);
-    void importCSV(List<String> lines,String entityName);
+    List<Exception> controlCSV(List<String> lines);
+    List<Exception> importCSV(List<String> lines,String entityName);
     void dropTemporaryTable();
 }
