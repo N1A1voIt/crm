@@ -11,4 +11,5 @@ public interface FileRepository extends JpaRepository<File, Integer> {
     public List<File> findByLeadLeadId(int leadId);
 
     public List<File> findByContractContractId(int contractId);
+
 }
