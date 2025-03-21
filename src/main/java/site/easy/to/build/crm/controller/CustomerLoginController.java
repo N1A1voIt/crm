@@ -22,6 +22,7 @@ public class CustomerLoginController {
 //
     @GetMapping("/set-password")
     public String showPasswordForm(Model model, @RequestParam("token") @Nullable String token) {
+        System.out.println(token);
         if(token == null) {
             return "redirect:/set-password";
         }
@@ -32,6 +33,22 @@ public class CustomerLoginController {
         model.addAttribute("customerLoginInfo", customerLoginInfo);
         return "set-password";
     }
+//@GetMapping("/set-password")
+//public String showPasswordForm(@RequestParam(value = "token", required = false) String token) {
+//    System.out.println("Token received: " + token);
+////
+////    if (token == null || token.isBlank()) {
+////        return "redirect:/error-page"; // Redirect to an error page instead of looping
+////    }
+////
+////    CustomerLoginInfo customerLoginInfo = customerLoginInfoService.findByToken(token);
+////    if (customerLoginInfo == null) {
+////        return "redirect:/error-page"; // Handle invalid tokens properly
+////    }
+////
+////    model.addAttribute("customerLoginInfo", customerLoginInfo);
+//    return "set-password";
+//}
 
     @PostMapping("/set-password")
     public String setPassword(@ModelAttribute("customerLoginInfo") CustomerLoginInfo customerLoginInfo, @RequestParam("token") @Nullable String token) {

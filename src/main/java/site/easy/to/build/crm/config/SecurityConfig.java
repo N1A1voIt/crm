@@ -116,17 +116,14 @@ public class SecurityConfig {
                 .csrfTokenRepository(httpSessionCsrfTokenRepository)
         );
 
-        http.securityMatcher("/customer-login/**").
-                authorizeHttpRequests((authorize) -> authorize
+        http.securityMatcher("/set-password/**","/customer-login/**")
+                .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/set-password/**").permitAll()
-                        .requestMatchers("/font-awesome/**").permitAll()
-                        .requestMatchers("/fonts/**").permitAll()
-                        .requestMatchers("/images/**").permitAll()
-                        .requestMatchers("/js/**").permitAll()
-                        .requestMatchers("/css/**").permitAll()
+                        .requestMatchers("/font-awesome/**", "/fonts/**", "/images/**", "/js/**", "/css/**").permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/**/manager/**")).hasRole("MANAGER")
                         .anyRequest().authenticated()
                 )
+
 
                 .formLogin((form) -> form
                         .loginPage("/customer-login")
