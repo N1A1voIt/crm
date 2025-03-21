@@ -44,6 +44,7 @@ public class  GoogleDriveApiServiceImpl implements GoogleDriveApiService {
             queryParams.put("includeItemsFromAllDrives", "true");
             queryParams.put("supportsAllDrives", "true");
             queryParams.put("corpora", "allDrives");
+            queryParams.put("spaces", "drive");
 
             if(nextPageToken != null) {
                 queryParams.put("pageToken", nextPageToken);

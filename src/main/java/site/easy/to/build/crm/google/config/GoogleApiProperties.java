@@ -44,8 +44,7 @@ public class GoogleApiProperties {
                                         String email,
                                         List<String> requiredScopes,
                                         GoogleAuthorizationCodeFlow googleAuthorizationCodeFlow) {
-
-        return googleAuthorizationCodeFlow
+        String authUri = googleAuthorizationCodeFlow
                 .newAuthorizationUrl()
                 .setClientId(clientId)
                 .setRedirectUri(redirectUri)
@@ -55,6 +54,7 @@ public class GoogleApiProperties {
                 .set("login_hint", email)
                 .set("prompt", "consent")
                 .build();
+        return authUri;
     }
 
 }
