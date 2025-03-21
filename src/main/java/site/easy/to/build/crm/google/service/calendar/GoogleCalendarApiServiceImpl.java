@@ -60,7 +60,10 @@ public class GoogleCalendarApiServiceImpl implements GoogleCalendarApiService {
         List<EventDisplay> eventDisplays = eventList.getItems().stream()
                 .map(event -> {
                     EventDateTime start = event.getStart();
+
                     EventDateTime end = event.getEnd();
+                    start.addStartTime();
+                    end.addStartTime();
                     Map<String, String> startDateTimeParts = TimeDateUtil.extractDateTime(start.getDateTime());
                     Map<String, String> endDateTimeParts = TimeDateUtil.extractDateTime(end.getDateTime());
 
