@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-public class GenericCSVHandler<T, R> {
+public class GenericCSVHandler<T extends Validatable, R> {
 
     private final EntityManager em;
     private Class<T> tempEntityClass;
@@ -77,11 +77,14 @@ public class GenericCSVHandler<T, R> {
         List<T> temp = readCsv(file);
         List<Exception> exceptions = new ArrayList<>();
         for (T entity : temp) {
-            try {
-                em.persist(entity);
-            } catch (Exception e) {
-                exceptions.add(e);
+            if (entity.isValid()) {
+                try {
+                    em.persist(entity);
+                } catch (Exception e) {
+                    exceptions.add(e);
+                }
             }
+
         }
         result.exceptions = exceptions;
         result.rows = temp;
@@ -99,12 +102,14 @@ public class GenericCSVHandler<T, R> {
             }
             Set<T> uniqueEntities = new HashSet<>(result.rows);
             for (T tempEntity : uniqueEntities) {
-                try {
-                    R entity = entityClass.getDeclaredConstructor().newInstance();
-                    copyProperties(tempEntity, entity);
-                    em.merge(entity);
-                } catch (Exception e) {
-                    throw new Exception(e);
+                if (tempEntity.isValid()) {
+                    try {
+                        R entity = entityClass.getDeclaredConstructor().newInstance();
+                        copyProperties(tempEntity, entity);
+                        em.merge(entity);
+                    } catch (Exception e) {
+                        throw new Exception(e);
+                    }
                 }
             }
         } catch (Exception e) {

@@ -11,6 +11,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import site.easy.to.build.crm.budget.entity.BudgetWithDetails;
+import site.easy.to.build.crm.budget.service.BudgetService;
 import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.entity.CustomerLoginInfo;
 import site.easy.to.build.crm.entity.OAuthUser;
@@ -43,6 +45,8 @@ public class CustomerController {
     private final TicketService ticketService;
     private final ContractService contractService;
     private final LeadService leadService;
+    @Autowired
+    private BudgetService budgetService;
 
     @Autowired
     public CustomerController(CustomerService customerService, UserService userService, CustomerLoginInfoService customerLoginInfoService,
@@ -87,6 +91,7 @@ public class CustomerController {
     @GetMapping("/{id}")
     public String showCustomerDetail(@PathVariable("id") int id, Model model, Authentication authentication) {
         Customer customer = customerService.findByCustomerId(id);
+        BudgetWithDetails budgetWithDetails = budgetService.getBudgetCpl(id);
         if(customer == null) {
             return "error/not-found";
         }
@@ -102,6 +107,7 @@ public class CustomerController {
         }
 
         model.addAttribute("customer",customer);
+        model.addAttribute("budget",budgetWithDetails);
         return "customer/customer-details";
     }
 
