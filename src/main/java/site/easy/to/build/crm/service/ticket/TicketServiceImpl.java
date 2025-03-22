@@ -1,18 +1,27 @@
 package site.easy.to.build.crm.service.ticket;
 
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import site.easy.to.build.crm.depenses.entity.Expens;
+import site.easy.to.build.crm.depenses.repository.ExpensesRepository;
+import site.easy.to.build.crm.depenses.service.ExpensService;
 import site.easy.to.build.crm.entity.Customer;
+import site.easy.to.build.crm.repository.CustomerRepository;
 import site.easy.to.build.crm.repository.TicketRepository;
 import site.easy.to.build.crm.entity.Ticket;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
 public class TicketServiceImpl implements TicketService{
 
     private final TicketRepository ticketRepository;
+    @Autowired
+    private ExpensService expensesRepository;
 
     public TicketServiceImpl(TicketRepository ticketRepository) {
         this.ticketRepository = ticketRepository;
@@ -20,12 +29,23 @@ public class TicketServiceImpl implements TicketService{
 
     @Override
     public Ticket findByTicketId(int id) {
-        return ticketRepository.findByTicketId(id);
+        Ticket ticket = ticketRepository.findByTicketId(id);
+        Expens expens = expensesRepository.findByTicketsId(id);
+        ticket.setDepense(expens.getAmount().doubleValue());
+        return ticket;
     }
 
     @Override
+    @Transactional
     public Ticket save(Ticket ticket) {
-        return ticketRepository.save(ticket);
+        Expens expens = new Expens();
+        expens.setAmount(BigDecimal.valueOf(ticket.getDepense()));
+        expens.setTickets(ticket);
+        Ticket ticket1 = ticketRepository.save(ticket);
+        expens.setTicket(ticket1.getTicketId());
+//        expens.setDaty(ticket1.getCreatedAt().toLocalDate());
+        expensesRepository.save(expens);
+        return ticket1;
     }
 
     @Override

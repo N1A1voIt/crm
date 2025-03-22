@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import site.easy.to.build.crm.entity.Lead;
+import site.easy.to.build.crm.entity.Ticket;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,10 +32,18 @@ public class Expens {
     @Column(name = "daty")
     private LocalDate daty;
 
-    @Column(name = "ticket_id", nullable = false)
-    private int ticket;
+    @Column(name = "ticket_id")
+    private Integer ticket;
 
-    @Column(name = "lead_id", nullable = false)
-    private int lead;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ticket_id",insertable = false, updatable = false)
+    private Ticket tickets;
+
+
+    @Column(name = "lead_id")
+    private Integer lead;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lead_id",insertable = false, updatable = false)
+    private Lead leads;
 
 }
