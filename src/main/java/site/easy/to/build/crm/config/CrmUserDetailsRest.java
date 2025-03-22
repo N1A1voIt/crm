@@ -3,6 +3,8 @@ package site.easy.to.build.crm.config;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AccountStatusException;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,32 +13,37 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import site.easy.to.build.crm.repository.UserRepository;
 import site.easy.to.build.crm.entity.User;
+import site.easy.to.build.crm.repository.UserRepository;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-public class CrmUserDetails implements UserDetailsService {
-
+public class CrmUserDetailsRest implements UserDetailsService {
     @Autowired
     UserRepository userRepository;
+    String username;
 
-    @Autowired
-    HttpSession session;
-    @Autowired
-    private HttpServletResponse request;
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String crmUsername, password;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public UserDetails loadUserByUsername(String username) {
+        String password;
         User user = userRepository.findByUsername(username).size() == 1  ? userRepository.findByUsername(username).get(0) : null;
         List<GrantedAuthority> authorities;
         if(user == null) {
             throw new UsernameNotFoundException("user details not found for the user : " + username);
+        }if ("suspended".equals(user.getStatus())) {
+            throw new AccountStatusException("Account suspended") {};
         } else {
             if(user.getStatus().equals("suspended")) {
                 HttpServletResponse httpServletResponse =
@@ -49,7 +56,6 @@ public class CrmUserDetails implements UserDetailsService {
                 }
             }
             password = user.getPassword();
-            session.setAttribute("loggedInUserId", user.getId());
             authorities = user.getRoles().stream()
                     .map(role -> new SimpleGrantedAuthority(role.getName()))
                     .collect(Collectors.toList());
@@ -57,6 +63,4 @@ public class CrmUserDetails implements UserDetailsService {
 
         return new org.springframework.security.core.userdetails.User(username,password,authorities);
     }
-
-
 }

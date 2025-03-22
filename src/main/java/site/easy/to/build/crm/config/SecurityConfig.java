@@ -1,5 +1,6 @@
 package site.easy.to.build.crm.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -7,11 +8,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AccountStatusException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import site.easy.to.build.crm.config.oauth2.CustomOAuth2UserService;
@@ -24,30 +33,100 @@ import java.util.Optional;
 
 @Configuration
 public class SecurityConfig {
-
-
     private final OAuthLoginSuccessHandler oAuth2LoginSuccessHandler;
-
     private final CustomOAuth2UserService oauthUserService;
-
     private final CrmUserDetails crmUserDetails;
-
     private final CustomerUserDetails customerUserDetails;
-
-    private final Environment environment;
+    private final CrmUserDetailsRest customerUserDetailsRest;
 
     @Autowired
-    public SecurityConfig(OAuthLoginSuccessHandler oAuth2LoginSuccessHandler, CustomOAuth2UserService oauthUserService, CrmUserDetails crmUserDetails,
-                          CustomerUserDetails customerUserDetails, Environment environment) {
+    JwtUtils jwtUtil;
+    @Autowired
+    private AuthEntryPointJwt unauthorizedHandler;
+
+    @Autowired
+    public SecurityConfig(OAuthLoginSuccessHandler oAuth2LoginSuccessHandler,
+                          CustomOAuth2UserService oauthUserService,
+                          CrmUserDetails crmUserDetails,
+                          CustomerUserDetails customerUserDetails,
+                          CrmUserDetailsRest customerUserDetailsRest) {
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
         this.oauthUserService = oauthUserService;
         this.crmUserDetails = crmUserDetails;
         this.customerUserDetails = customerUserDetails;
-        this.environment = environment;
+        this.customerUserDetailsRest = customerUserDetailsRest;
     }
 
     @Bean
-    @Order(2)
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
+            throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
+    @Bean
+    public AuthenticationEntryPoint authenticationEntryPoint() {
+        return (request, response, authException) -> {
+            if (authException instanceof AccountStatusException) {
+                response.sendRedirect("/account-suspended");
+            } else {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            }
+        };
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+
+        authProvider.setUserDetailsService(customerUserDetailsRest);
+        authProvider.setPasswordEncoder(passwordEncoder());
+
+        return authProvider;
+    }
+    @Bean
+    public AuthTokenFilter authenticationJwtTokenFilter() {
+        return new AuthTokenFilter();
+    }
+    @Bean
+    @Order(1)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable())
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth ->
+                        auth.requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/test/**").permitAll()
+                                .anyRequest().authenticated()
+                );
+
+        http.authenticationProvider(authenticationProvider());
+
+        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+//
+//    @Bean
+//    public JwtRequestFilter jwtRequestFilter(JwtUtils jwtUtil, CrmUserDetails crmUserDetails) {
+//        return new JwtRequestFilter(jwtUtil, crmUserDetails);
+//    }
+
+////
+////    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+////        return new JwtAuthenticationFilter(tokenProvider, crmUserDetails);
+////    }
+////
+//    @Bean
+//    public AuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+//        return (request, response, authException) -> {
+//            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+//        };
+//    }
+
+
+
+    @Bean
+    @Order(3)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
@@ -94,6 +173,12 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> {
                     exception.accessDeniedHandler(accessDeniedHandler());
                 });
+//        http
+//                .authorizeRequests()
+//                .requestMatchers("/api/auth/login").permitAll() // Public login endpoint for API
+//                .anyRequest().authenticated() // Secure other API endpoints
+//                .and()
+//                .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class); // Add the JWT filter for API
 
 
         return http.build();
@@ -105,7 +190,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(1)
+    @Order(2)
     public SecurityFilterChain customerSecurityFilterChain(HttpSecurity http) throws Exception {
 
 

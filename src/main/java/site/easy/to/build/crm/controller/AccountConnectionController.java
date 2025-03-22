@@ -58,6 +58,7 @@ public class AccountConnectionController {
         boolean regularAccountVerified = verifyRegularAccount(user.getUsername(), user.getPassword(), userId);
         OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
 
+            System.out.println("Simple login");
         if(regularAccountVerified) {
             User currentUser = userService.findByUsername(user.getUsername()).get(0);
             oAuthUserService.save(oAuthUser, currentUser);

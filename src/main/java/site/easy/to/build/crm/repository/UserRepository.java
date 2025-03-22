@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import site.easy.to.build.crm.entity.User;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
@@ -13,6 +14,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     public User findById(int id);
 
     public List<User> findByUsername(String username);
+
+    public Optional<User> findByUsernameAndPassword(String username, String password);
 
     public User findByEmail(String email);
 
