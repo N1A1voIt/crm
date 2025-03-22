@@ -126,6 +126,7 @@ public class GoogleAccessServiceImpl implements GoogleAccessService {
         oAuthUserService.save(oAuthUser, user);
         if (actualGrantedScopes.contains(SCOPE_DRIVE)) {
             try {
+
                 googleDriveApiService.findOrCreateTemplateFolder(oAuthUser, "Templates");
             } catch (IOException | GeneralSecurityException e) {
 //                throw new RuntimeException(e);

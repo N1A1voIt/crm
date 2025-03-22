@@ -143,8 +143,8 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
 
                 user.setRoles(List.of(role));
                 user.setCreatedAt(LocalDateTime.now());
-                user = userService.findByEmail(email);
-                if (user == null) {
+                User findedUser = userService.findByEmail(email);
+                if (findedUser == null) {
                     user = userService.save(user);
                 }
                 userProfile.setUser(user);

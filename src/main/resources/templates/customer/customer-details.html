@@ -126,6 +126,25 @@
                                     </div>
                                     <hr>
                                     <p class="m-t-30" th:utext="${customer.description}"></p>
+                                    <h4 class="m-t-30">Budget Details</h4>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Designation</th>
+                                            <th>Budget Amount</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="budget : ${budget.budgets}">
+                                            <td th:text="${budget.id}"></td>
+                                            <td th:text="${budget.designation}"></td>
+                                            <td th:text="${budget.budget}"></td>
+                                        </tr>
+                                        </tbody>
+                                        <h3>Budget total: <span th:text="${budget.getCustomer().getBudget().doubleValue()}"></span></h3>
+                                    </table>
+                                </div>
                                 </div>
                             </div>
                         </div>

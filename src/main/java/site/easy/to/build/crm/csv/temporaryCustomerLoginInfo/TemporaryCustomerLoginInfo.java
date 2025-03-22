@@ -4,12 +4,13 @@ import com.opencsv.bean.CsvBindByName;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import site.easy.to.build.crm.csv.Validatable;
 
 @Entity
 @Table(name = "temp_table_clg")
 @Getter
 @Setter
-public class TemporaryCustomerLoginInfo {
+public class TemporaryCustomerLoginInfo implements Validatable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,4 +32,9 @@ public class TemporaryCustomerLoginInfo {
     @CsvBindByName(column = "password_set")
     @Column(name = "password_set")
     private Boolean passwordSet;
+
+    @Override
+    public boolean isValid() {
+        return true;
+    }
 }

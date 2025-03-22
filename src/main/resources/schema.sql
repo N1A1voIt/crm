@@ -505,3 +505,59 @@ CREATE TABLE IF NOT EXISTS `google_drive_file` (
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+
+
+CREATE TABLE budgets(
+                        id INT AUTO_INCREMENT,
+                        budget DECIMAL(18,2)   NOT NULL,
+                        date_min DATE,
+                        date_max DATE,
+                        designation VARCHAR(250) ,
+                        customer_id INT UNSIGNED NOT NULL,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(customer_id) REFERENCES customer(customer_id)
+);
+
+CREATE TABLE expenses(
+                         id INT AUTO_INCREMENT,
+                         amount DECIMAL(18,2)   NOT NULL,
+                         label VARCHAR(250) ,
+                         daty DATE,
+                         ticket_id INT UNSIGNED,
+                         lead_id INT UNSIGNED,
+                         PRIMARY KEY(id),
+                         FOREIGN KEY(ticket_id) REFERENCES trigger_ticket(ticket_id),
+                         FOREIGN KEY(lead_id) REFERENCES trigger_lead(lead_id)
+);
+
+CREATE TABLE taux_alerte(
+                            id INT AUTO_INCREMENT,
+                            taux DECIMAL(5,2)   NOT NULL,
+                            PRIMARY KEY(id)
+);
+
+CREATE TABLE token(
+                      id INT AUTO_INCREMENT,
+                      token VARCHAR(250) ,
+                      id_user INT NOT NULL,
+                      PRIMARY KEY(id),
+                      FOREIGN KEY(id_user) REFERENCES users(id)
+);
+
+CREATE VIEW total_budget_customer AS
+SELECT  coalesce(SUM(budget),0) as budget,customer.customer_id,name
+from customer LEFT JOIN crm.budgets c on c.customer_id = customer.customer_id GROUP BY customer.customer_id,name;
+
+CREATE VIEW tota_expens_lead AS
+SELECT coalesce(SUM(expenses.amount),0) as lead_expense,customer.customer_id FROM customer
+                                                                                      LEFT JOIN trigger_lead on trigger_lead.customer_id = customer.customer_id
+                                                                                      LEFT JOIN expenses on expenses.lead_id = trigger_lead.lead_id = expenses.lead_id GROUP BY  customer.customer_id;
+
+CREATE VIEW tota_expens_ticket AS
+SELECT coalesce(SUM(expenses.amount),0) as ticket_expense,customer.customer_id FROM customer
+                                                                                        LEFT JOIN trigger_ticket on trigger_ticket.customer_id = customer.customer_id
+                                                                                        LEFT JOIN expenses on expenses.ticket_id = trigger_ticket.ticket_id = expenses.ticket_id GROUP BY  customer.customer_id;
+
+CREATE VIEW total_expenses AS
+SELECT lead_expense+tet.ticket_expense,tota_expens_lead.customer_id FROM tota_expens_lead LEFT JOIN tota_expens_ticket tet on tota_expens_lead.customer_id = tet.customer_id;
