@@ -31,12 +31,19 @@ public class JwtUtils {
     private String jwtCookie;
 
     public String getJwtFromCookies(HttpServletRequest request) {
-        Cookie cookie = WebUtils.getCookie(request, jwtCookie);
-        if (cookie != null) {
-            return cookie.getValue();
-        } else {
-            return null;
+//        Cookie cookie = WebUtils.getCookie(request, jwtCookie);
+//        if (cookie != null) {
+//            return cookie.getValue();
+//        } else {
+//            return null;
+//        }
+
+        String authorizationHeader = request.getHeader("authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.replace("Bearer ","");
         }
+
+        return null;
     }
 
     public ResponseCookie generateJwtCookie(UserDetails userPrincipal) {
