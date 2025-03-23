@@ -2,8 +2,12 @@ package site.easy.to.build.crm.service.ticket;
 
 import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.entity.Ticket;
+import site.easy.to.build.crm.util.Frequency;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public interface TicketService {
     public Ticket findByTicketId(int id);
@@ -33,4 +37,8 @@ public interface TicketService {
     long countByCustomerCustomerId(int customerId);
 
     void deleteAllByCustomer(Customer customer);
+
+    Map<LocalDate, BigDecimal> findCostPerTickets(String frequency);
+
+
 }

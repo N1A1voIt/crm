@@ -48,7 +48,7 @@ public class Ticket {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Transient
+    @Column(name = "depense")
     private Double depense;
 
     public Ticket() {

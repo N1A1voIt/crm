@@ -9,19 +9,27 @@ import site.easy.to.build.crm.depenses.entity.Expens;
 import site.easy.to.build.crm.depenses.repository.ExpensesRepository;
 import site.easy.to.build.crm.depenses.service.ExpensService;
 import site.easy.to.build.crm.entity.Customer;
-import site.easy.to.build.crm.repository.CustomerRepository;
 import site.easy.to.build.crm.repository.TicketRepository;
 import site.easy.to.build.crm.entity.Ticket;
+import site.easy.to.build.crm.util.Frequency;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TicketServiceImpl implements TicketService{
 
     private final TicketRepository ticketRepository;
     @Autowired
-    private ExpensService expensesRepository;
+    private ExpensService expensService;
+    @Autowired
+    private ExpensesRepository expensesRepository;
 
     public TicketServiceImpl(TicketRepository ticketRepository) {
         this.ticketRepository = ticketRepository;
@@ -30,21 +38,21 @@ public class TicketServiceImpl implements TicketService{
     @Override
     public Ticket findByTicketId(int id) {
         Ticket ticket = ticketRepository.findByTicketId(id);
-        Expens expens = expensesRepository.findByTicketsId(id);
-        ticket.setDepense(expens.getAmount().doubleValue());
+//        Expens expens = expensService.findByTicketsId(id);
+//        ticket.setDepense(expens.getAmount().doubleValue());
         return ticket;
     }
 
     @Override
     @Transactional
     public Ticket save(Ticket ticket) {
-        Expens expens = new Expens();
-        expens.setAmount(BigDecimal.valueOf(ticket.getDepense()));
-        expens.setTickets(ticket);
+//        Expens expens = new Expens();
+//        expens.setAmount(BigDecimal.valueOf(ticket.getDepense()));
+//        expens.setTickets(ticket);
         Ticket ticket1 = ticketRepository.save(ticket);
-        expens.setTicket(ticket1.getTicketId());
+//        expens.setTicket(ticket1.getTicketId());
 //        expens.setDaty(ticket1.getCreatedAt().toLocalDate());
-        expensesRepository.save(expens);
+//        expensService.save(expens);
         return ticket1;
     }
 
@@ -110,4 +118,39 @@ public class TicketServiceImpl implements TicketService{
     public void deleteAllByCustomer(Customer customer) {
         ticketRepository.deleteAllByCustomer(customer);
     }
+
+    @Override
+    @Transactional
+    public Map<LocalDate, BigDecimal> findCostPerTickets(String frequency) {
+        List<Ticket> tickets = ticketRepository.findAll();
+
+        return tickets.stream()
+                .filter(ticket -> ticket.getDepense() != null) // Ensure only tickets with a defined expense are processed
+                .collect(Collectors.groupingBy(
+                        ticket -> adjustDate(ticket.getCreatedAt().toLocalDate(), frequency),
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                ticketList -> {
+                                    BigDecimal totalCost = ticketList.stream()
+                                            .map(ticket -> BigDecimal.valueOf(ticket.getDepense()))
+                                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                    int ticketCount = ticketList.size();
+                                    return ticketCount > 0 ? totalCost.divide(BigDecimal.valueOf(ticketCount), RoundingMode.HALF_UP) : BigDecimal.ZERO;
+                                }
+                        )
+                ));
+    }
+    private LocalDate adjustDate(LocalDate date, String frequency) {
+        switch (frequency) {
+            case "DAILY":
+                return date;
+            case "WEEKLY":
+                return date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            case "MONTHLY":
+                return date.with(TemporalAdjusters.firstDayOfMonth());
+            default:
+                throw new IllegalArgumentException("Unsupported frequency: " + frequency);
+        }
+    }
+
 }

@@ -39,6 +39,8 @@ import site.easy.to.build.crm.util.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -128,18 +130,20 @@ public class LeadController {
     }
 
     @GetMapping("/assigned-leads")
-    public String showAssignedEmployeeLeads(Authentication authentication, Model model) {
+    public String showAssignedEmployeeLeads(Authentication authentication, Model model,@RequestParam(value = "warning",required = false) String warning) {
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         List<Lead> leads = leadService.findAssignedLeads(userId);
         model.addAttribute("leads", leads);
+        if(warning != null) model.addAttribute("warning",warning);
         return "lead/show-my-leads";
     }
 
     @GetMapping("/created-leads")
-    public String showCreatedEmployeeLeads(Authentication authentication, Model model) {
+    public String showCreatedEmployeeLeads(Authentication authentication, Model model,@RequestParam(value = "warning",required = false) String warning) {
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         List<Lead> leads = leadService.findCreatedLeads(userId);
         model.addAttribute("leads", leads);
+        if(warning != null) model.addAttribute("warning",warning);
         return "lead/show-my-leads";
     }
 
@@ -236,9 +240,6 @@ public class LeadController {
                              Authentication authentication, @RequestParam("allFiles") @Nullable String files,
                              @RequestParam("folderId") @Nullable String folderId, Model model) throws JsonProcessingException {
 
-
-        System.out.println("aqqzesxdcfgvhbjnkv,lr;evzrvr---------------------");
-
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
         if (manager.isInactiveUser()) {
@@ -256,26 +257,26 @@ public class LeadController {
         if (AuthorizationUtil.hasRole(authentication, "ROLE_EMPLOYEE") && (employee.getId() != userId)) {
             return "error/500";
         }
+
         lead.setCustomer(customer);
         lead.setEmployee(employee);
         lead.setManager(manager);
         lead.setGoogleDriveFolderId(folderId);
         lead.setCreatedAt(LocalDateTime.now());
 
-        System.out.println(lead.getDepense());
         // Validate budget
         BudgetValidator budgetValidator = validationService.validateBudget(lead.getDepense(), customerId);
+        String warningMessage = null;
+
         if (budgetValidator.getType() == 2) {
-            // Type 2: Budget exceeded, confirmation required
             model.addAttribute("lead", lead);
             model.addAttribute("message", budgetValidator.getMessage());
             model.addAttribute("allFiles", files);
             model.addAttribute("folderId", folderId);
-
             return "lead/confirm-budget-exceed";
         } else if (budgetValidator.getType() == 1) {
-            // Type 1: Budget warning, proceed with caution
-            model.addAttribute("warning", budgetValidator.getMessage());
+            warningMessage = budgetValidator.getMessage();
+            model.addAttribute("warning", warningMessage);
         }
 
         // Proceed with lead creation
@@ -300,14 +301,18 @@ public class LeadController {
             fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);
         }
 
+        // Append warning parameter if available
+        String warningParam = (warningMessage != null) ? "&warning=" + URLEncoder.encode(warningMessage, StandardCharsets.UTF_8) : "";
+
         if (lead.getStatus().equals("meeting-to-schedule")) {
-            return "redirect:/employee/calendar/create-event?leadId=" + lead.getLeadId();
+            return "redirect:/employee/calendar/create-event?leadId=" + createdLead.getLeadId() + warningParam;
         }
         if (AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
-            return "redirect:/employee/lead/created-leads";
+            return "redirect:/employee/lead/created-leads" + (warningMessage != null ? "?warning=" + URLEncoder.encode(warningMessage, StandardCharsets.UTF_8) : "");
         }
-        return "redirect:/employee/lead/assigned-leads";
+        return "redirect:/employee/lead/assigned-leads" + (warningMessage != null ? "?warning=" + URLEncoder.encode(warningMessage, StandardCharsets.UTF_8) : "");
     }
+
 
     @PostMapping("/confirmCreateLead")
     public String confirmCreateLead(@ModelAttribute("lead") Lead lead,

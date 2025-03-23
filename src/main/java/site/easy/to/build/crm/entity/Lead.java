@@ -60,7 +60,7 @@ public class Lead {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Transient
+    @Column(name = "depense")
     private Double depense;
 
     public Lead() {
