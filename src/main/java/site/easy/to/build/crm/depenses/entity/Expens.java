@@ -7,9 +7,15 @@ import lombok.Getter;
 import lombok.Setter;
 import site.easy.to.build.crm.entity.Lead;
 import site.easy.to.build.crm.entity.Ticket;
+import site.easy.to.build.crm.util.Frequency;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+
+import static site.easy.to.build.crm.util.Frequency.DAILY;
+import static site.easy.to.build.crm.util.Frequency.WEEKLY;
 
 @Getter
 @Setter
@@ -45,5 +51,9 @@ public class Expens {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lead_id",insertable = false, updatable = false)
     private Lead leads;
+
+
+
+
 
 }

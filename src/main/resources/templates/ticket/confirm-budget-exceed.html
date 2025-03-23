@@ -79,6 +79,7 @@
                                 <input type="hidden" th:field="*{priority}" />
                                 <input type="hidden" th:field="*{depense}" />
                                 <input type="hidden" th:field="*{employee.id}" />
+                                <input type="hidden" th:field="*{createdAt}" />
                                 <input type="hidden" th:field="*{customer.customerId}" />
                                 <button type="submit" class="btn btn-primary m-t-20">Create ticket</button>
                                 <a th:href="@{/employee/ticket/create}">Annuler</a>

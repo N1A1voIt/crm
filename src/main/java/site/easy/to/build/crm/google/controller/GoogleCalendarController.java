@@ -71,7 +71,7 @@ public class GoogleCalendarController {
     }
 
     @GetMapping("/create-event")
-    public String showCreateEventForm(Model model, Authentication authentication, @RequestParam(value = "leadId", required = false) Integer leadId) {
+    public String showCreateEventForm(Model model, Authentication authentication, @RequestParam(value = "leadId", required = false) Integer leadId,@RequestParam(value = "warning", required = false) String warning) {
         if((authentication instanceof UsernamePasswordAuthenticationToken)) {
             return "/google-error";
         }
@@ -99,6 +99,7 @@ public class GoogleCalendarController {
         model.addAttribute("eventDisplay",eventDisplay);
         model.addAttribute("email", email);
         model.addAttribute("leadId", leadId);
+        if (warning != null) model.addAttribute("warning", warning);
         return "calendar/event-form";
     }
 

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import site.easy.to.build.crm.entity.Customer;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,4 +35,7 @@ public class Budget {
     @Column(name = "customer_id")
     private Integer customer;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    Customer customere;
 }

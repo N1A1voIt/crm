@@ -74,7 +74,9 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-body">
+
                             <h4 class="card-title">Tickets</h4>
+                            <h5 th:if="${warning}" th:text="${warning}" style="color: red;"></h5>
                             <div class="table-responsive m-t-40">
                                 <table id="config-table" class="table display table-bordered table-striped no-wrap">
                                     <thead>
@@ -85,6 +87,7 @@
                                         <th>Status</th>
                                         <th>Customer</th>
                                         <th>Assigned Employee</th>
+                                        <th>Expens</th>
                                         <th>Show Full Details</th>
                                         <th>Edit</th>
                                         <th>Delete</th>
@@ -98,6 +101,7 @@
                                         <td th:text="${ticket.status}"></td>
                                         <td th:text="${ticket.customer.name}"></td>
                                         <td th:text="${ticket.employee.username}"></td>
+                                        <td th:text="${ticket.depense}"></td>
                                         <td><a th:href="${home + 'employee/ticket/show-ticket/' + ticket.ticketId}"><i class="fas fa-eye"></i></a></td>
                                         <td><a th:href="${home + 'employee/ticket/update-ticket/' + ticket.ticketId}"><i class="fas fa-edit"></i></a></td>
                                         <td>
