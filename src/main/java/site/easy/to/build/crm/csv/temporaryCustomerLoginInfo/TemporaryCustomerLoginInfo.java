@@ -4,6 +4,7 @@ import com.opencsv.bean.CsvBindByName;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import site.easy.to.build.crm.csv.InvalidRowException;
 import site.easy.to.build.crm.csv.Validatable;
 
 @Entity
@@ -36,5 +37,10 @@ public class TemporaryCustomerLoginInfo implements Validatable {
     @Override
     public boolean isValid() {
         return true;
+    }
+
+    @Override
+    public boolean isInvalid() throws InvalidRowException {
+        return false;
     }
 }

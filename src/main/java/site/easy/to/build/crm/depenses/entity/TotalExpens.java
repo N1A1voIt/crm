@@ -1,12 +1,10 @@
 package site.easy.to.build.crm.depenses.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Immutable;
+import site.easy.to.build.crm.entity.Customer;
 
 import java.math.BigDecimal;
 
@@ -19,10 +17,16 @@ import java.math.BigDecimal;
 @Immutable
 @Table(name = "total_expenses")
 public class TotalExpens {
-    @Column(name = "`lead_expense+tet.ticket_expense`", precision = 41, scale = 2)
-    private BigDecimal leadExpenseTetTicketExpense;
+    @Column(name = "total", precision = 41, scale = 2)
+    private BigDecimal total;
     @Id
     @Column(name = "customer_id", columnDefinition = "int UNSIGNED not null")
     private Long customerId;
+
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    private Customer customer;
 
 }

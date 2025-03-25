@@ -78,6 +78,7 @@
                     <div class="card">
                         <div class="row">
                             <div class="card-body">
+                                <h5 th:if="*{warning}" th:text="*{warning}"></h5>
                                 <form th:action="@{/employee/calendar/create-event}" th:object="${eventDisplay}" method="post">
 
                                     <label class="m-t-20" for="summary">Summary:</label>

@@ -16,6 +16,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import site.easy.to.build.crm.budget.BudgetValidator;
+import site.easy.to.build.crm.budget.ValidationService;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.entity.settings.LeadEmailSettings;
 import site.easy.to.build.crm.google.model.calendar.EventDisplay;
@@ -37,6 +39,8 @@ import site.easy.to.build.crm.util.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -60,6 +64,8 @@ public class LeadController {
     private final LeadEmailSettingsService leadEmailSettingsService;
     private final GoogleGmailApiService googleGmailApiService;
     private final EntityManager entityManager;
+    @Autowired
+    ValidationService validationService;
 
     @Autowired
     public LeadController(LeadService leadService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
@@ -124,18 +130,20 @@ public class LeadController {
     }
 
     @GetMapping("/assigned-leads")
-    public String showAssignedEmployeeLeads(Authentication authentication, Model model) {
+    public String showAssignedEmployeeLeads(Authentication authentication, Model model,@RequestParam(value = "warning",required = false) String warning) {
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         List<Lead> leads = leadService.findAssignedLeads(userId);
         model.addAttribute("leads", leads);
+        if(warning != null) model.addAttribute("warning",warning);
         return "lead/show-my-leads";
     }
 
     @GetMapping("/created-leads")
-    public String showCreatedEmployeeLeads(Authentication authentication, Model model) {
+    public String showCreatedEmployeeLeads(Authentication authentication, Model model,@RequestParam(value = "warning",required = false) String warning) {
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         List<Lead> leads = leadService.findCreatedLeads(userId);
         model.addAttribute("leads", leads);
+        if(warning != null) model.addAttribute("warning",warning);
         return "lead/show-my-leads";
     }
 
@@ -164,19 +172,81 @@ public class LeadController {
         return "lead/create-lead";
     }
 
+//    @PostMapping("/create")
+//    public String createLead(@ModelAttribute("lead") @Validated Lead lead, BindingResult bindingResult,
+//                             @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
+//                             Authentication authentication, @RequestParam("allFiles")@Nullable String files,
+//                             @RequestParam("folderId") @Nullable String folderId, Model model) throws JsonProcessingException {
+//
+//
+//
+//        int userId = authenticationUtils.getLoggedInUserId(authentication);
+//        User manager = userService.findById(userId);
+//        if(manager.isInactiveUser()) {
+//            return "error/account-inactive";
+//        }
+//
+//        if(bindingResult.hasErrors()) {
+//            User user = userService.findById(userId);
+//            populateModelAttributes(model, authentication, user);
+//            return "lead/create-lead";
+//        }
+//
+//        User employee = userService.findById(employeeId);
+//        Customer customer = customerService.findByCustomerId(customerId);
+//        if(AuthorizationUtil.hasRole(authentication, "ROLE_EMPLOYEE") && (employee.getId() != userId)) {
+//            return "error/500";
+//        }
+//        lead.setCustomer(customer);
+//        lead.setEmployee(employee);
+//        lead.setManager(manager);
+//        lead.setGoogleDriveFolderId(folderId);
+//        lead.setCreatedAt(LocalDateTime.now());
+//
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        List<Attachment> allFiles = objectMapper.readValue(files, new TypeReference<List<Attachment>>() {
+//        });
+//
+//        if (!(authentication instanceof UsernamePasswordAuthenticationToken) && googleDriveApiService != null) {
+//            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
+//            try {
+//                if (folderId != null && !folderId.isEmpty()) {
+//                    googleDriveApiService.checkFolderExists(oAuthUser, folderId);
+//                }
+//            } catch (IOException | GeneralSecurityException e) {
+//                return "error/500";
+//            }
+//        }
+//
+//        Lead createdLead = leadService.save(lead);
+//        fileUtil.saveFiles(allFiles, createdLead);
+//
+//        if (lead.getGoogleDrive() != null && folderId != null) {
+//            fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);
+//        }
+//
+//        if (lead.getStatus().equals("meeting-to-schedule")) {
+//            return "redirect:/employee/calendar/create-event?leadId=" + lead.getLeadId();
+//        }
+//        if(AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+//            return "redirect:/employee/lead/created-leads";
+//        }
+//        return "redirect:/employee/lead/assigned-leads";
+//    }
+
     @PostMapping("/create")
     public String createLead(@ModelAttribute("lead") @Validated Lead lead, BindingResult bindingResult,
                              @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
-                             Authentication authentication, @RequestParam("allFiles")@Nullable String files,
+                             Authentication authentication, @RequestParam("allFiles") @Nullable String files,
                              @RequestParam("folderId") @Nullable String folderId, Model model) throws JsonProcessingException {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
-        if(manager.isInactiveUser()) {
+        if (manager.isInactiveUser()) {
             return "error/account-inactive";
         }
 
-        if(bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors()) {
             User user = userService.findById(userId);
             populateModelAttributes(model, authentication, user);
             return "lead/create-lead";
@@ -184,18 +254,34 @@ public class LeadController {
 
         User employee = userService.findById(employeeId);
         Customer customer = customerService.findByCustomerId(customerId);
-        if(AuthorizationUtil.hasRole(authentication, "ROLE_EMPLOYEE") && (employee.getId() != userId)) {
+        if (AuthorizationUtil.hasRole(authentication, "ROLE_EMPLOYEE") && (employee.getId() != userId)) {
             return "error/500";
         }
+
         lead.setCustomer(customer);
         lead.setEmployee(employee);
         lead.setManager(manager);
         lead.setGoogleDriveFolderId(folderId);
         lead.setCreatedAt(LocalDateTime.now());
 
+        // Validate budget
+        BudgetValidator budgetValidator = validationService.validateBudget(lead.getDepense(), customerId);
+        String warningMessage = null;
+
+        if (budgetValidator.getType() == 2) {
+            model.addAttribute("lead", lead);
+            model.addAttribute("message", budgetValidator.getMessage());
+            model.addAttribute("allFiles", files);
+            model.addAttribute("folderId", folderId);
+            return "lead/confirm-budget-exceed";
+        } else if (budgetValidator.getType() == 1) {
+            warningMessage = budgetValidator.getMessage();
+            model.addAttribute("warning", warningMessage);
+        }
+
+        // Proceed with lead creation
         ObjectMapper objectMapper = new ObjectMapper();
-        List<Attachment> allFiles = objectMapper.readValue(files, new TypeReference<List<Attachment>>() {
-        });
+        List<Attachment> allFiles = objectMapper.readValue(files, new TypeReference<List<Attachment>>() {});
 
         if (!(authentication instanceof UsernamePasswordAuthenticationToken) && googleDriveApiService != null) {
             OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
@@ -215,16 +301,56 @@ public class LeadController {
             fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);
         }
 
+        // Append warning parameter if available
+        String warningParam = (warningMessage != null) ? "&warning=" + URLEncoder.encode(warningMessage, StandardCharsets.UTF_8) : "";
+
         if (lead.getStatus().equals("meeting-to-schedule")) {
-            return "redirect:/employee/calendar/create-event?leadId=" + lead.getLeadId();
+            return "redirect:/employee/calendar/create-event?leadId=" + createdLead.getLeadId() + warningParam;
         }
-        if(AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+        if (AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "redirect:/employee/lead/created-leads" + (warningMessage != null ? "?warning=" + URLEncoder.encode(warningMessage, StandardCharsets.UTF_8) : "");
+        }
+        return "redirect:/employee/lead/assigned-leads" + (warningMessage != null ? "?warning=" + URLEncoder.encode(warningMessage, StandardCharsets.UTF_8) : "");
+    }
+
+
+    @PostMapping("/confirmCreateLead")
+    public String confirmCreateLead(@ModelAttribute("lead") Lead lead,
+                                    @RequestParam("allFiles") @Nullable String files,
+                                    @RequestParam("folderId") @Nullable String folderId,
+                                    Authentication authentication, Model model) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Attachment> allFiles = objectMapper.readValue(files, new TypeReference<List<Attachment>>() {});
+        if (!(authentication instanceof UsernamePasswordAuthenticationToken) && googleDriveApiService != null) {
+            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
+            try {
+                if (folderId != null && !folderId.isEmpty()) {
+                    googleDriveApiService.checkFolderExists(oAuthUser, folderId);
+                }
+            } catch (IOException | GeneralSecurityException e) {
+                return "error/500";
+            }
+        }
+
+        Lead createdLead = leadService.save(lead);
+        fileUtil.saveFiles(allFiles, createdLead);
+
+        if (lead.getGoogleDrive() != null && folderId != null) {
+            fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);
+        }
+
+        if (lead.getStatus().equals("meeting-to-schedule")) {
+            return "redirect:/employee/calendar/create-event?leadId=" + createdLead.getLeadId();
+        }
+        if (AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
             return "redirect:/employee/lead/created-leads";
         }
         return "redirect:/employee/lead/assigned-leads";
     }
 
-    @GetMapping("/update/{id}")
+
+
+        @GetMapping("/update/{id}")
     public String showUpdatingForm(Model model, @PathVariable("id") int id, Authentication authentication) {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);

@@ -11,6 +11,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import site.easy.to.build.crm.budget.BudgetValidator;
+import site.easy.to.build.crm.budget.ValidationService;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.entity.settings.TicketEmailSettings;
 import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
@@ -24,6 +26,8 @@ import site.easy.to.build.crm.util.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -41,6 +45,8 @@ public class TicketController {
     private final TicketEmailSettingsService ticketEmailSettingsService;
     private final GoogleGmailApiService googleGmailApiService;
     private final EntityManager entityManager;
+    @Autowired
+    ValidationService validationService;
 
 
     @Autowired
@@ -92,10 +98,11 @@ public class TicketController {
     }
 
     @GetMapping("/assigned-tickets")
-    public String showEmployeeTicket(Model model, Authentication authentication) {
+    public String showEmployeeTicket(Model model, Authentication authentication,@RequestParam(value = "warning", required = false) String warning) {
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         List<Ticket> tickets = ticketService.findEmployeeTickets(userId);
         model.addAttribute("tickets",tickets);
+        if (warning != null) model.addAttribute("warning", warning);
         return "ticket/my-tickets";
     }
     @GetMapping("/create-ticket")
@@ -125,7 +132,7 @@ public class TicketController {
     @PostMapping("/create-ticket")
     public String createTicket(@ModelAttribute("ticket") @Validated Ticket ticket, BindingResult bindingResult, @RequestParam("customerId") int customerId,
                                @RequestParam Map<String, String> formParams, Model model,
-                               @RequestParam("employeeId") int employeeId, Authentication authentication) {
+                               @RequestParam("employeeId") int employeeId, Authentication authentication) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
@@ -169,6 +176,50 @@ public class TicketController {
         ticket.setEmployee(employee);
         ticket.setCreatedAt(LocalDateTime.now());
 
+        BudgetValidator budgetValidator = validationService.validateBudget(ticket.getDepense(), customerId);
+        String warning = "";
+        if (budgetValidator.getType() == 2) {
+            // Type 2: Budget exceeded, confirmation required
+            model.addAttribute("ticket", ticket);
+            model.addAttribute("message", budgetValidator.getMessage());
+
+            return "ticket/confirm-budget-exceed";
+        } else if (budgetValidator.getType() == 1) {
+            // Type 1: Budget warning, proceed with caution
+            warning = budgetValidator.getMessage();
+            model.addAttribute("warning", budgetValidator.getMessage());
+        }
+
+        ticketService.save(ticket);
+        String buildwarning = warning.isEmpty() ? "" : "?warning="+ URLEncoder.encode(warning, StandardCharsets.UTF_8);
+        return "redirect:/employee/ticket/assigned-tickets"+buildwarning;
+    }
+
+    @PostMapping("/create-ticket-valid")
+    public String createTicketValidate(@ModelAttribute("ticket") @Validated Ticket ticket,
+                                Authentication authentication) throws Exception {
+
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User manager = userService.findById(userId);
+        if(manager == null) {
+            return "error/500";
+        }
+        if(manager.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        User employee = userService.findById(ticket.getEmployee().getId());
+        Customer customer = customerService.findByCustomerId(ticket.getCustomer().getCustomerId());
+
+        if(employee == null || customer == null) {
+            return "error/500";
+        }
+        if(AuthorizationUtil.hasRole(authentication, "ROLE_EMPLOYEE")) {
+            if(userId != employee.getId() || customer.getUser().getId() != userId) {
+                return "error/500";
+            }
+        }
+        ticket.setManager(manager);
         ticketService.save(ticket);
 
         return "redirect:/employee/ticket/assigned-tickets";
@@ -218,7 +269,7 @@ public class TicketController {
     @PostMapping("/update-ticket")
     public String updateTicket(@ModelAttribute("ticket") @Validated Ticket ticket, BindingResult bindingResult,
                                @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
-                               Authentication authentication, Model model) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+                               Authentication authentication, Model model) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User loggedInUser = userService.findById(userId);
@@ -238,6 +289,8 @@ public class TicketController {
         Customer customer = customerService.findByCustomerId(customerId);
 
         if(manager == null || employee ==null || customer == null) {
+
+            System.out.println();
             return "error/500";
         }
 
@@ -269,15 +322,20 @@ public class TicketController {
         }
         if(manager.getId() == employeeId) {
             if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER") && customer.getUser().getId() != userId) {
+                System.out.println("This one");
                 return "error/500";
             }
         } else {
             if(!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER") && originalTicket.getCustomer().getCustomerId() != customerId) {
+                System.out.println("This two");
+
                 return "error/500";
             }
         }
 
         if(AuthorizationUtil.hasRole(authentication, "ROLE_EMPLOYEE") && employee.getId() != userId) {
+            System.out.println("This three");
+
             return "error/500";
         }
 

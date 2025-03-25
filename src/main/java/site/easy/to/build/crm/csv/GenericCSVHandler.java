@@ -1,123 +1,155 @@
 package site.easy.to.build.crm.csv;
 
+import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.exceptionhandler.CsvExceptionHandler;
+import com.opencsv.exceptions.*;
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import org.hibernate.exception.ConstraintViolationException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
+@Transactional(propagation = Propagation.MANDATORY,rollbackFor = {RuntimeException.class,CSVProcessingException.class})
 public class GenericCSVHandler<T extends Validatable, R> {
 
     private final EntityManager em;
     private Class<T> tempEntityClass;
     private Class<R> entityClass;
-    private  String tempTableName;
-    private  String createTableQuery;
+    private String tempTableName;
+    private String createTableQuery;
 
-    public Class<T> getTempEntityClass() {
-        return tempEntityClass;
+    public GenericCSVHandler(EntityManager em) {
+        this.em = em;
     }
 
     public void setTempEntityClass(Class<T> tempEntityClass) {
         this.tempEntityClass = tempEntityClass;
     }
 
-    public Class<R> getEntityClass() {
-        return entityClass;
-    }
-
     public void setEntityClass(Class<R> entityClass) {
         this.entityClass = entityClass;
-    }
-
-    public String getTempTableName() {
-        return tempTableName;
     }
 
     public void setTempTableName(String tempTableName) {
         this.tempTableName = tempTableName;
     }
 
-    public String getCreateTableQuery() {
-        return createTableQuery;
-    }
-
     public void setCreateTableQuery(String createTableQuery) {
         this.createTableQuery = createTableQuery;
     }
 
-    public GenericCSVHandler(EntityManager em) {
-        this.em = em;
-    }
-
-    public List<T> readCsv(MultipartFile file) throws IOException {
-        CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(
-                new InputStreamReader(file.getInputStream()))
+    public List<T> readCsv(MultipartFile file) throws IOException{
+        CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(new InputStreamReader(file.getInputStream()))
                 .withType(tempEntityClass)
                 .build();
-        return csvToBean.parse();
+        return new ArrayList<>(new HashSet<>(csvToBean.parse()));
     }
 
+
+
+//    public List<T> readCsv(MultipartFile file) throws IOException {
+//        List<T> records = new ArrayList<>();
+//        List<String> exceptions = new ArrayList<>();
+//
+//        try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+//            CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(reader)
+//                    .withType(tempEntityClass)
+//                    .withIgnoreLeadingWhiteSpace(true)
+//                    .withThrowExceptions(false) // Prevent exceptions from being thrown
+//                    .build();
+//
+//            records = csvToBean.parse();
+//
+//            // Capture exceptions with line numbers
+//            for (CsvException e : csvToBean.getCapturedExceptions()) {
+//                exceptions.add("Error on line " + e.getLineNumber() + ": " + e.getMessage());
+//            }
+//        } catch (Exception e) {
+//            exceptions.add("Unexpected error: " + e.getMessage());
+//        }
+//
+//        if (!exceptions.isEmpty()) {
+//            throw new CSVProcessingException("Validation failed", exceptions);
+//        }
+//
+//        return records;
+//    }
+//    @Transactional(propagation = Propagation.MANDATORY)
     public void createTemporaryTable() {
         em.createNativeQuery(createTableQuery).executeUpdate();
     }
 
+//    @Transactional(propagation = Propagation.MANDATORY)
     public CsvTempResult<T> controlCSV(MultipartFile file) throws IOException {
-        CsvTempResult<T> result = new CsvTempResult<>();
-        List<T> temp = readCsv(file);
-        List<Exception> exceptions = new ArrayList<>();
-        for (T entity : temp) {
-            if (entity.isValid()) {
-                try {
+        List<T> tempEntities = readCsv(file);
+        List<String> exceptions = new ArrayList<>();
+
+        for (int i = 0; i < tempEntities.size(); i++) {
+            T entity = tempEntities.get(i);
+            try {
+                entity.isInvalid();
+                if (entity.isValid()) {
                     em.persist(entity);
-                } catch (Exception e) {
-                    exceptions.add(e);
+                }
+            } catch (InvalidRowException e) {
+                List<String> messages = e.getInvalidDesc();
+                for (String message : messages) {
+                    exceptions.add("Error on line " + (i + 1) + " in the file: " + file.getOriginalFilename() + ": " + message);
                 }
             }
-
+            catch (ConstraintViolationException e){
+                e.printStackTrace();
+                exceptions.add("Error on line " + (i + 1) + " in the file: " + file.getOriginalFilename() + ": " + e.getCause().getMessage());
+                em.clear();
+            }catch (Exception e) {
+                e.printStackTrace();
+                exceptions.add("Error on line " + (i + 1) + " in the file: " + file.getOriginalFilename() + ": " + e.getCause().getMessage());
+                em.clear();
+            }
         }
-        result.exceptions = exceptions;
-        result.rows = temp;
-        return result;
+
+        if (!exceptions.isEmpty()) {
+            throw new CSVProcessingException("Validation failed", exceptions);
+        }
+        return new CsvTempResult<>(tempEntities, Collections.emptyList());
     }
 
-    @Transactional
     public List<Exception> importCSV(MultipartFile file) throws IOException {
+        System.out.println(file.getOriginalFilename());
+        createTemporaryTable();
         try {
-            createTemporaryTable();
             CsvTempResult<T> result = controlCSV(file);
-            if (!result.exceptions.isEmpty()) {
-                dropTemporaryTable();
-                return result.exceptions;
+            for (T tempEntity : result.rows) {
+                R entity = createTargetEntity(tempEntity);
+                em.merge(entity);
             }
-            Set<T> uniqueEntities = new HashSet<>(result.rows);
-            for (T tempEntity : uniqueEntities) {
-                if (tempEntity.isValid()) {
-                    try {
-                        R entity = entityClass.getDeclaredConstructor().newInstance();
-                        copyProperties(tempEntity, entity);
-                        em.merge(entity);
-                    } catch (Exception e) {
-                        throw new Exception(e);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            return Collections.emptyList();
+        } catch (CSVProcessingException e) {
+            throw new IOException("CSV processing failed", e);
+        } catch (CsvDataTypeMismatchException e) {
+            throw new RuntimeException("Unexpected error during CSV import (insertion on main tables)", e);
+        }  catch (Exception e) {
+            throw new RuntimeException("Unexpected error during CSV import (insertion on main tables)", e);
         } finally {
             dropTemporaryTable();
         }
-        return null;
+    }
+
+    private R createTargetEntity(T source) throws Exception {
+        R target = entityClass.getDeclaredConstructor().newInstance();
+        copyProperties(source, target);
+        return target;
     }
 
     private void copyProperties(T source, R target) throws IllegalAccessException {
@@ -129,16 +161,22 @@ public class GenericCSVHandler<T extends Validatable, R> {
                 targetField.setAccessible(true);
                 targetField.set(target, field.get(source));
             } catch (NoSuchFieldException e) {
+                // Handle or log the exception if necessary
             }
         }
     }
 
+//    @Transactional(propagation = Propagation.MANDATORY)
     public void dropTemporaryTable() {
-        em.createNativeQuery("DROP TABLE " + tempTableName).executeUpdate();
+        try {
+            em.clear();
+            em.createNativeQuery("DROP TABLE IF EXISTS " + tempTableName).executeUpdate();
+            em.flush();
+
+            System.out.println("Temporary table " + tempTableName + " dropped successfully.");
+        } catch (Exception e) {
+            System.err.println("Failed to drop temporary table: " + e.getMessage());
+        }
     }
 
-    public static class CsvTempResult<T> {
-        public List<T> rows;
-        public List<Exception> exceptions;
-    }
 }

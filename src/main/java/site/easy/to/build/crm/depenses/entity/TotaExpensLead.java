@@ -1,13 +1,11 @@
 package site.easy.to.build.crm.depenses.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Immutable;
+import site.easy.to.build.crm.entity.Customer;
 
 import java.math.BigDecimal;
 
@@ -26,5 +24,10 @@ public class TotaExpensLead {
     @Id
     @Column(name = "customer_id", columnDefinition = "int UNSIGNED not null")
     private Long customerId;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    private Customer customer;
 
 }

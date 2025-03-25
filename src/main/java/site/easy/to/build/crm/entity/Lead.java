@@ -39,7 +39,7 @@ public class Lead {
     @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL)
     private List<LeadAction> leadActions;
 
-    @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "lead", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private List<File> files;
 
     @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL)
@@ -59,6 +59,9 @@ public class Lead {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "depense")
+    private Double depense;
 
     public Lead() {
     }
@@ -216,6 +219,14 @@ public class Lead {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Double getDepense() {
+        return depense;
+    }
+
+    public void setDepense(Double depense) {
+        this.depense = depense;
     }
 }
 

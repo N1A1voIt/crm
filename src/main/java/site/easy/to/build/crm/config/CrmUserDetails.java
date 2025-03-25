@@ -15,6 +15,7 @@ import site.easy.to.build.crm.repository.UserRepository;
 import site.easy.to.build.crm.entity.User;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -56,4 +57,6 @@ public class CrmUserDetails implements UserDetailsService {
 
         return new org.springframework.security.core.userdetails.User(username,password,authorities);
     }
+
+
 }

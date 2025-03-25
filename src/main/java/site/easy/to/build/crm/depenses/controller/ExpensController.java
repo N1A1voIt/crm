@@ -7,14 +7,19 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import site.easy.to.build.crm.depenses.entity.Expens;
 import site.easy.to.build.crm.depenses.repository.ExpensesRepository;
+import site.easy.to.build.crm.depenses.service.ExpensService;
 
 @Controller
 public class ExpensController {
     @Autowired
-    ExpensesRepository expensesRepository;
+    ExpensService expensesService;
 
-//    @PostMapping("/employee/post-expens")
-//    public String postExpens(@ModelAttribute("expens")Expens expens, Model model){
-//
-//    }
+    @PostMapping("/employee/expens/save")
+    public String postExpens(@ModelAttribute("expens")Expens expens, Model model){
+        expensesService.save(expens);
+        return "redirect:/employee/expens";
+    }
+
+
+
 }

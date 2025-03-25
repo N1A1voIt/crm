@@ -25,6 +25,7 @@ public class BudgetService {
         BudgetCustomer budgetCustomer = budgetCustomerRepository.findByCustomerId(idCustomer).orElse(null);
         return budgetCustomer;
     }
+
     public BudgetWithDetails getBudgetCpl(int idCustomer) {
         BudgetCustomer budgetCustomer = getBudgetCustomer(idCustomer);
         List<Budget> budgets = budgetRepository.findBudgetByCustomer(idCustomer);

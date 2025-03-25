@@ -27,7 +27,7 @@ public class Customer {
     @Column(name = "email")
     @NotBlank(message = "Email is required")
     @Email(message = "Please enter a valid email format")
-    @UniqueEmail
+    @UniqueEmail(message = "Email must be unique", groups = {Default.class, CustomerUpdateValidationGroupInclusion.class})
     private String email;
 
     @Column(name = "position")

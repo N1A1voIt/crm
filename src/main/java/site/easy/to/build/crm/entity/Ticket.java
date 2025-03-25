@@ -48,6 +48,9 @@ public class Ticket {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "depense")
+    private Double depense;
+
     public Ticket() {
     }
 
@@ -132,5 +135,13 @@ public class Ticket {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Double getDepense() {
+        return depense;
+    }
+
+    public void setDepense(Double depense) {
+        this.depense = depense;
     }
 }
