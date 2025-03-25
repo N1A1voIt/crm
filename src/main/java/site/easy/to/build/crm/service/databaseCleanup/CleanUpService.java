@@ -26,6 +26,20 @@ public class CleanUpService {
             entityManager.createNativeQuery("DELETE FROM ticket_settings").executeUpdate();
             entityManager.createNativeQuery("DELETE FROM file").executeUpdate();
             entityManager.createNativeQuery("DELETE FROM google_drive_file").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM budgets").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM budget_imp").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM ticket_lead_imp").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM customer_imp").executeUpdate();
+        } finally {
+            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+        }
+    }
+    public void cleanupImport() {
+        entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+        try {
+            entityManager.createNativeQuery("DELETE FROM customer").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM trigger_lead").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM trigger_ticket").executeUpdate();
         } finally {
             entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
         }

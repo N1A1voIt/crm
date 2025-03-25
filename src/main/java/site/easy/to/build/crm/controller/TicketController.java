@@ -132,7 +132,7 @@ public class TicketController {
     @PostMapping("/create-ticket")
     public String createTicket(@ModelAttribute("ticket") @Validated Ticket ticket, BindingResult bindingResult, @RequestParam("customerId") int customerId,
                                @RequestParam Map<String, String> formParams, Model model,
-                               @RequestParam("employeeId") int employeeId, Authentication authentication) {
+                               @RequestParam("employeeId") int employeeId, Authentication authentication) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
@@ -197,7 +197,7 @@ public class TicketController {
 
     @PostMapping("/create-ticket-valid")
     public String createTicketValidate(@ModelAttribute("ticket") @Validated Ticket ticket,
-                                Authentication authentication) {
+                                Authentication authentication) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
@@ -269,7 +269,7 @@ public class TicketController {
     @PostMapping("/update-ticket")
     public String updateTicket(@ModelAttribute("ticket") @Validated Ticket ticket, BindingResult bindingResult,
                                @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
-                               Authentication authentication, Model model) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+                               Authentication authentication, Model model) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User loggedInUser = userService.findById(userId);

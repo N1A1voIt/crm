@@ -18,8 +18,7 @@ import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,10 +44,11 @@ public class TicketServiceImpl implements TicketService{
 
     @Override
     @Transactional
-    public Ticket save(Ticket ticket) {
+    public Ticket save(Ticket ticket) throws Exception {
 //        Expens expens = new Expens();
 //        expens.setAmount(BigDecimal.valueOf(ticket.getDepense()));
 //        expens.setTickets(ticket);
+        if(ticket.getDepense() < 0) throw new Exception("Valeure non valide");
         Ticket ticket1 = ticketRepository.save(ticket);
 //        expens.setTicket(ticket1.getTicketId());
 //        expens.setDaty(ticket1.getCreatedAt().toLocalDate());
@@ -123,23 +123,34 @@ public class TicketServiceImpl implements TicketService{
     @Transactional
     public Map<LocalDate, BigDecimal> findCostPerTickets(String frequency) {
         List<Ticket> tickets = ticketRepository.findAll();
+        Map<LocalDate, List<Ticket>> groupedTickets = new TreeMap<>();
+        for (Ticket ticket : tickets) {
+            if (ticket.getDepense() != null) {
+                LocalDate adjustedDate = adjustDate(ticket.getCreatedAt().toLocalDate(), frequency);
+                groupedTickets.putIfAbsent(adjustedDate, new ArrayList<>());
+                groupedTickets.get(adjustedDate).add(ticket);
+            }
+        }
 
-        return tickets.stream()
-                .filter(ticket -> ticket.getDepense() != null) // Ensure only tickets with a defined expense are processed
-                .collect(Collectors.groupingBy(
-                        ticket -> adjustDate(ticket.getCreatedAt().toLocalDate(), frequency),
-                        Collectors.collectingAndThen(
-                                Collectors.toList(),
-                                ticketList -> {
-                                    BigDecimal totalCost = ticketList.stream()
-                                            .map(ticket -> BigDecimal.valueOf(ticket.getDepense()))
-                                            .reduce(BigDecimal.ZERO, BigDecimal::add);
-                                    int ticketCount = ticketList.size();
-                                    return ticketCount > 0 ? totalCost.divide(BigDecimal.valueOf(ticketCount), RoundingMode.HALF_UP) : BigDecimal.ZERO;
-                                }
-                        )
-                ));
+        Map<LocalDate, BigDecimal> costPerTicketMap = new LinkedHashMap<>();
+        for (Map.Entry<LocalDate, List<Ticket>> entry : groupedTickets.entrySet()) {
+            List<Ticket> ticketList = entry.getValue();
+            BigDecimal totalCost = BigDecimal.ZERO;
+
+            for (Ticket ticket : ticketList) {
+                totalCost = totalCost.add(BigDecimal.valueOf(ticket.getDepense()));
+            }
+
+            BigDecimal averageCost = ticketList.size() > 0 ?
+                    totalCost.divide(BigDecimal.valueOf(ticketList.size()), RoundingMode.HALF_UP) :
+                    BigDecimal.ZERO;
+
+            costPerTicketMap.put(entry.getKey(), averageCost);
+        }
+
+        return costPerTicketMap;
     }
+
     private LocalDate adjustDate(LocalDate date, String frequency) {
         switch (frequency) {
             case "DAILY":

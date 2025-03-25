@@ -25,7 +25,7 @@ public class TLService {
         lead.setDepense(tlBody.amount);
         return leadService.save(lead);
     }
-    public Ticket updateTicket(TLBody tlBody){
+    public Ticket updateTicket(TLBody tlBody) throws Exception{
         Ticket ticket = ticketServiceImpl.findByTicketId(tlBody.getId());
         ticket.setDepense(tlBody.amount);
         return ticketServiceImpl.save(ticket);

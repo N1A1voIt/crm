@@ -12,7 +12,7 @@ import java.util.Map;
 public interface TicketService {
     public Ticket findByTicketId(int id);
 
-    public Ticket save(Ticket ticket);
+    public Ticket save(Ticket ticket) throws Exception;
 
     public void delete(Ticket ticket);
 

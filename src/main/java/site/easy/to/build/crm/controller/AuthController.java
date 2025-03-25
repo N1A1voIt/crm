@@ -50,27 +50,19 @@ public class AuthController {
 
     @Autowired
     private CrmUserDetails userDetailsService;
-
-
     @Autowired
     private JwtUtils jwtUtils;
+
     @PostMapping("/api/auth/login")
     public ResponseEntity<?> login(@RequestBody LoginDto authRequest) {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
         ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
-
-
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
-
-
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                 .body(userDetails);
     }
