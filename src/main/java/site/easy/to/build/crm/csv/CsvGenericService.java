@@ -34,7 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 
 @Service
-@Transactional()
+@Transactional
+
 public class CsvGenericService {
     @Autowired
     ImportTicketLead importTicketLead;
@@ -64,13 +65,9 @@ public class CsvGenericService {
     EntityManager em;
 
 
-    @Transactional(rollbackFor = Exception.class)
     public List<String> importCPL(MultipartFile file1, MultipartFile file2, MultipartFile file3, User user) throws CSVProcessingException {
 //        em.getTransaction().begin();
         List<String> errors = new ArrayList<String>();
-        List<TicketLeadImp> ticketLeadImps = new ArrayList<>();
-        List<CustomerImp> customerImps = new ArrayList<>();
-        List<BudgetImp> budgetImps = new ArrayList<>();
         try{
             try{
                 importTicketLead.importTicketLead(file1);
@@ -92,28 +89,16 @@ public class CsvGenericService {
             }
             if (errors.size() > 0) {
                 CSVProcessingException exception = new CSVProcessingException("CSV errors", errors);
-//                cleanUpService.cleanupImport();
                 throw exception;
             }
-//            for (TicketLeadImp ticketLeadImp : ticketLeadImps) {
-//                em.merge(ticketLeadImp);
-//            }
-//            for (CustomerImp customerImp : customerImps) {
-//                em.merge(customerImp);
-//            }
-//            for (BudgetImp budgetImp : budgetImps) {
-//                em.merge(budgetImp);
-//            }
-//            em.flush();
+
             saveEntities(user);
-//            em.getTransaction().commit();
         }catch (Exception e){
 //            em.getTransaction().rollback();
             throw e;
         }
         return errors;
     }
-
     public void saveEntities(User user) {
         try{
             List<TicketLeadImp> ticketLeadImps = em.createNativeQuery("SELECT * FROM ticket_lead_imp",TicketLeadImp.class).getResultList();

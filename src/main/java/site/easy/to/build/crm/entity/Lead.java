@@ -39,7 +39,7 @@ public class Lead {
     @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL)
     private List<LeadAction> leadActions;
 
-    @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "lead", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private List<File> files;
 
     @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL)

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import site.easy.to.build.crm.budget.entity.Budget;
 import site.easy.to.build.crm.budget.repository.BudgetRepository;
 import site.easy.to.build.crm.repository.CustomerRepository;
@@ -67,6 +68,7 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.countByUserId(userId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<CustomerBudgetDTO> budgetCustomer() {
         Map<Integer, BigDecimal> map = new HashMap<>();
@@ -75,6 +77,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         for (Budget budget : budgets) {
             Customer customerEntity = budget.getCustomere();
+            System.out.println(customerEntity);
             customerMap.computeIfAbsent(customerEntity.getCustomerId(), k -> {
                 CustomerDTO dto = new CustomerDTO();
                 dto.setCustomerId(customerEntity.getCustomerId());

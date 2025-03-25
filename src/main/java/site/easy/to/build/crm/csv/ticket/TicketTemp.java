@@ -5,13 +5,11 @@ import com.opencsv.bean.CsvDate;
 import com.opencsv.bean.CsvNumber;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
+import site.easy.to.build.crm.csv.InvalidRowException;
 import site.easy.to.build.crm.csv.Validatable;
-import site.easy.to.build.crm.entity.Customer;
-import site.easy.to.build.crm.entity.User;
 
 import java.time.LocalDateTime;
 @Entity
@@ -76,4 +74,9 @@ public class TicketTemp implements Validatable {
     public boolean isValid() {
         return true;
     }
+
+        @Override
+        public boolean isInvalid() throws InvalidRowException {
+                return false;
+        }
 }

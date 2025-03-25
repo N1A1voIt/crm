@@ -14,6 +14,7 @@ import site.easy.to.build.crm.csv.CsvService;
 import site.easy.to.build.crm.csv.customerTemp.ImportCustomer;
 import site.easy.to.build.crm.csv.ticket.ImportTicket;
 import site.easy.to.build.crm.entity.User;
+import site.easy.to.build.crm.service.databaseCleanup.CleanUpService;
 import site.easy.to.build.crm.service.user.UserService;
 import site.easy.to.build.crm.util.AuthenticationUtils;
 
@@ -33,6 +34,8 @@ public class CsvController {
     UserService userService;
     @Autowired
     private AuthenticationUtils authenticationUtils;
+    @Autowired
+    private CleanUpService cleanUpService;
 
     @GetMapping("/csv-page")
     public String csvPage(Model model) {
@@ -70,7 +73,15 @@ public class CsvController {
                 System.out.println("dztfyudiaz"+exception);
                 messages.add(exception);
             }
+            cleanUpService.cleanupTemp();
             model.addAttribute("error", e.getErrors());
+            e.printStackTrace();
+            return "/csv-page";
+        }catch (Exception e) {
+            List<String> messages = new ArrayList<>();
+            messages.add(e.getMessage());
+            cleanUpService.cleanupTemp();
+            model.addAttribute("error", e.getMessage());
             e.printStackTrace();
             return "/csv-page";
         }

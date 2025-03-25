@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import site.easy.to.build.crm.csv.CSVProcessingException;
 import site.easy.to.build.crm.csv.GenericCSVHandler;
 import site.easy.to.build.crm.csv.customerTemp.CustomerForImp;
 import site.easy.to.build.crm.csv.customerTemp.CustomerTemp;
@@ -14,11 +15,11 @@ import java.io.IOException;
 import java.util.List;
 
 @Service
+@Transactional(propagation = Propagation.REQUIRED,rollbackFor = {Exception.class, CSVProcessingException.class})
 public class ImportTicketLead {
     @Autowired
     GenericCSVHandler<TicketLeadImpTemp, TicketLeadImp> customerLoginInfoGenericCSVHandler;
 
-    @Transactional(propagation = Propagation.MANDATORY)
     public List<Exception> importTicketLead(MultipartFile file) throws IOException {
         String tempTableScript = "CREATE TEMPORARY TABLE IF NOT EXISTS temp_ticket_lead_imp (" +
                 "    id INT PRIMARY KEY AUTO_INCREMENT," +
@@ -48,8 +49,9 @@ public class ImportTicketLead {
         customerLoginInfoGenericCSVHandler.setTempEntityClass(TicketLeadImpTemp.class);
         customerLoginInfoGenericCSVHandler.setEntityClass(TicketLeadImp.class);
         customerLoginInfoGenericCSVHandler.setTempTableName(tempTable);
-//        customerLoginInfoGenericCSVHandler.dropTemporaryTable();
+        customerLoginInfoGenericCSVHandler.dropTemporaryTable();
         customerLoginInfoGenericCSVHandler.setCreateTableQuery(tempTableScript);
+
         return customerLoginInfoGenericCSVHandler.importCSV(file);
     }
 }

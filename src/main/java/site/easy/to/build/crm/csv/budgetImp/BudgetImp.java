@@ -3,6 +3,7 @@ package site.easy.to.build.crm.csv.budgetImp;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvNumber;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -30,6 +31,7 @@ public class BudgetImp {
     @Column(name = "budget", nullable = false, precision = 18, scale = 2)
     @CsvBindByName(column = "Budget")
     @CsvNumber("#,##")
+    @DecimalMin(value = "0.00", inclusive = false,message = "qesstxrcyvuybuierbveyuvujezvhzev")
     private BigDecimal budget;
 
 }

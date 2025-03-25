@@ -43,7 +43,7 @@ public class ImportCustomer {
         customerLoginInfoGenericCSVHandler.setTempTableName(tempTable);
         customerLoginInfoGenericCSVHandler.setCreateTableQuery(tempTableScript);
         List<Exception> customer = customerLoginInfoGenericCSVHandler.importCSV(file);
-        customerLoginInfoGenericCSVHandler.safeDropTemporaryTable();
+//        customerLoginInfoGenericCSVHandler.safeDropTemporaryTable();
         return customer;
     }
 }

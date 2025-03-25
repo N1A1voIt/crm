@@ -89,6 +89,14 @@ public class DataGenerationService {
         Date randomDate = new Date(randomTime);
         return randomDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
+    public LocalDateTime generateRandomDateLogically(LocalDateTime localDateTime) {
+        faker.date().future(365,TimeUnit.DAYS,Date.from(localDateTime.toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        long currentTime = System.currentTimeMillis();
+        long yearInMillis = TimeUnit.DAYS.toMillis(365);
+        long randomTime = currentTime - faker.random().nextLong(yearInMillis);
+        Date randomDate = new Date(randomTime);
+        return randomDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
 
     public void generateLead(User user,List<Customer> customers) {
 //        List<Customer> customers = customerRepository.findAll();

@@ -6,9 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import site.easy.to.build.crm.csv.InvalidRowException;
 import site.easy.to.build.crm.csv.Validatable;
 
-import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -35,5 +38,20 @@ public class CustomerImpTemp implements Validatable {
     @Override
     public boolean isValid() {
         return true;
+    }
+
+    @Override
+    public boolean isInvalid() throws InvalidRowException {
+        InvalidRowException invalidRowException = new InvalidRowException("Invalid row");
+        List<String> messages = new ArrayList<>();
+        if (customerEmail == null || customerEmail.isEmpty()) {
+            messages.add("customer name is null or empty");
+        }if (customerEmail == null || customerEmail.isEmpty()) {
+            messages.add("customer name is null or empty");
+        }
+        invalidRowException.setInvalidDesc(messages);
+        if(!messages.isEmpty()) throw invalidRowException;
+
+        return false;
     }
 }

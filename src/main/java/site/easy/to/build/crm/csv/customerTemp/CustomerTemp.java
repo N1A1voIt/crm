@@ -1,7 +1,5 @@
 package site.easy.to.build.crm.csv.customerTemp;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvDate;
 import jakarta.persistence.*;
@@ -10,14 +8,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.groups.Default;
 import lombok.Getter;
 import lombok.Setter;
+import site.easy.to.build.crm.csv.InvalidRowException;
 import site.easy.to.build.crm.csv.Validatable;
 import site.easy.to.build.crm.customValidations.customer.UniqueEmail;
 import site.easy.to.build.crm.entity.Customer;
-import site.easy.to.build.crm.entity.CustomerLoginInfo;
-import site.easy.to.build.crm.entity.User;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -114,5 +110,10 @@ public class CustomerTemp implements Validatable {
     @Override
     public boolean isValid() {
         return true;
+    }
+
+    @Override
+    public boolean isInvalid() throws InvalidRowException {
+        return false;
     }
 }

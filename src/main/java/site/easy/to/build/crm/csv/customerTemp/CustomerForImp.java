@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.groups.Default;
 import lombok.Getter;
 import lombok.Setter;
+import site.easy.to.build.crm.csv.InvalidRowException;
 import site.easy.to.build.crm.csv.Validatable;
 import site.easy.to.build.crm.customValidations.customer.UniqueEmail;
 import site.easy.to.build.crm.entity.Customer;
@@ -33,7 +34,7 @@ public class CustomerForImp implements Validatable {
     @Column(name = "email")
     @NotBlank(message = "Email is required")
     @Email(message = "Please enter a valid email format")
-    @UniqueEmail
+    @UniqueEmail(message = "Email should be unique", groups = {Default.class, Customer.CustomerUpdateValidationGroupInclusion.class})
     private String email;
     @CsvBindByName(column = "position")
     @Column(name = "position")
@@ -95,5 +96,10 @@ public class CustomerForImp implements Validatable {
     @Override
     public boolean isValid() {
         return true;
+    }
+
+    @Override
+    public boolean isInvalid() throws InvalidRowException {
+        return false;
     }
 }
