@@ -11,11 +11,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
+
 import org.hibernate.exception.ConstraintViolationException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -49,16 +48,65 @@ public class GenericCSVHandler<T extends Validatable, R> {
         this.createTableQuery = createTableQuery;
     }
 
-    public List<T> readCsv(MultipartFile file) throws IOException{
-        CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(new InputStreamReader(file.getInputStream()))
-                .withType(tempEntityClass)
-                .build();
-//        new ArrayList<>(new HashSet<>(csvToBean.parse()));
-        return csvToBean.parse();
+//    public List<T> readCsv(MultipartFile file) throws IOException{
+//        CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(new InputStreamReader(file.getInputStream()))
+//                .withType(tempEntityClass)
+//                .build();
+////        new ArrayList<>(new HashSet<>(csvToBean.parse()));
+//        return csvToBean.parse();
+//    }
+
+
+
+    public List<T> readCsv(MultipartFile file) throws CSVProcessingException,IOException {
+        List<T> validRecords = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        InputStream inputStream = file.getInputStream();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            int lineNumber = 0;
+
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+
+                if (lineNumber == 1) {
+                    continue;
+                }
+
+                try {
+                    T record = parseCsvLine(line);
+                    if (record != null) {
+                        validRecords.add(record);
+                    } else {
+                        errors.add("CSV parse error at:"+lineNumber+"in the file "+file.getOriginalFilename()+":"+" invalid format");
+                    }
+                } catch (Exception e) {
+                    errors.add("CSV parse error at:"+lineNumber+"in the file "+file.getOriginalFilename()+":"+ e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            throw new IOException("Error reading CSV file: " + e.getMessage(), e);
+        }
+        if (!errors.isEmpty()) {
+            throw new CSVProcessingException("CSV ERROR:",errors);
+        }
+
+        return validRecords;
     }
 
-
-
+    private  T parseCsvLine(String line) throws Exception {
+        System.out.println(line);
+        try (StringReader stringReader = new StringReader(line)) {
+            CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(stringReader)
+                    .withType(tempEntityClass)
+                    .withSeparator(',')
+                    .withIgnoreLeadingWhiteSpace(true)
+                    .build();
+            List<T> records = csvToBean.parse();
+            return (records.isEmpty()) ? null : records.get(0);
+        }
+    }
 //    public List<T> readCsv(MultipartFile file) throws IOException {
 //        List<T> records = new ArrayList<>();
 //        List<String> exceptions = new ArrayList<>();
@@ -93,7 +141,12 @@ public class GenericCSVHandler<T extends Validatable, R> {
 
 //    @Transactional(propagation = Propagation.MANDATORY)
     public CsvTempResult<T> controlCSV(MultipartFile file) throws IOException {
-        List<T> tempEntities = readCsv(file);
+    List<T> tempEntities = new ArrayList<>();
+    try {
+        tempEntities = readCsv(file);
+    }catch (CSVProcessingException e) {
+        throw e;
+    }
         List<String> exceptions = new ArrayList<>();
 
         for (int i = 0; i < tempEntities.size(); i++) {

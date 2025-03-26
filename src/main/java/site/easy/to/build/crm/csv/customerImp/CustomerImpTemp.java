@@ -1,6 +1,7 @@
 package site.easy.to.build.crm.csv.customerImp;
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvBindByPosition;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -27,12 +28,14 @@ public class CustomerImpTemp implements Validatable {
     @NotNull
     @Column(name = "customer_email", nullable = false, length = 250)
     @CsvBindByName(column = "customer_email")
+    @CsvBindByPosition(position = 0)
     private String customerEmail;
 
     @Size(max = 250)
     @NotNull
     @Column(name = "customer_name", nullable = false, length = 250)
     @CsvBindByName(column = "customer_name")
+    @CsvBindByPosition(position = 1)
     private String customerName;
 
     @Override

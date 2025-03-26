@@ -1,6 +1,8 @@
 package site.easy.to.build.crm.csv.budgetImp;
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvBindByPosition;
+import com.opencsv.bean.CsvNumber;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -28,12 +30,15 @@ public class BudgetImpTemp implements Validatable {
     @NotNull
     @Column(name = "customer_email", nullable = false, length = 250)
     @CsvBindByName(column = "customer_email")
+    @CsvBindByPosition(position = 0)
     private String customerEmail;
 
     @NotNull
     @Column(name = "budget", nullable = false, precision = 18, scale = 2)
     @CsvBindByName(column = "Budget")
     @DecimalMin(value = "0.00", inclusive = false,message = "qesstxrcyvuybuierbveyuvujezvhzev")
+    @CsvBindByPosition(position = 1)
+    @CsvNumber("#,##")
     private BigDecimal budget;
 
     @Override
