@@ -14,7 +14,7 @@ public class Lead {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "lead_id")
-    private int leadId;
+    private Integer leadId;
 
     @Column(name = "name")
     @NotBlank(message = "Name is required")
@@ -86,11 +86,11 @@ public class Lead {
         this.createdAt = createdAt;
     }
 
-    public int getLeadId() {
+    public Integer getLeadId() {
         return leadId;
     }
 
-    public void setLeadId(int leadId) {
+    public void setLeadId(Integer leadId) {
         this.leadId = leadId;
     }
 
@@ -229,6 +229,9 @@ public class Lead {
 
     public void setDepense(Double depense) {
         this.depense = depense;
+    }
+    public String toString(){
+        return "dup"+customer.getEmail()+","+name+","+"lead"+","+status+","+"\""+depense+"\"";
     }
 }
 

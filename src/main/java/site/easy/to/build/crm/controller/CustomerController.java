@@ -2,6 +2,12 @@ package site.easy.to.build.crm.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -13,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.easy.to.build.crm.budget.entity.BudgetWithDetails;
 import site.easy.to.build.crm.budget.service.BudgetService;
+import site.easy.to.build.crm.duplicate.DuplicateService;
 import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.entity.CustomerLoginInfo;
 import site.easy.to.build.crm.entity.OAuthUser;
@@ -29,6 +36,7 @@ import site.easy.to.build.crm.util.AuthenticationUtils;
 import site.easy.to.build.crm.util.AuthorizationUtil;
 import site.easy.to.build.crm.util.EmailTokenUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -47,6 +55,8 @@ public class CustomerController {
     private final LeadService leadService;
     @Autowired
     private BudgetService budgetService;
+    @Autowired
+    public DuplicateService duplicateService;
 
     @Autowired
     public CustomerController(CustomerService customerService, UserService userService, CustomerLoginInfoService customerLoginInfoService,
@@ -214,6 +224,30 @@ public class CustomerController {
         }
         return "redirect:/employee/customer/my-customers";
     }
-
+//    @GetMapping("/export/{id}")
+//    public String exportCustomer(@PathVariable("id") int id) {
+//        try{
+//            duplicateService.exportJson(customerService.findByCustomerId(id));
+//        }catch (Exception e){
+//            e.printStackTrace();
+//            return "error/500";
+//        }
+//        return "redirect:/employee/customer/my-customers";
+//    }
+    @GetMapping("/export/{id}")
+    public ResponseEntity<Resource> exportCustomer(@PathVariable("id") int id) {
+        try {
+            Customer customer = customerService.findByCustomerId(id);
+            String json = duplicateService.exportJson(customer);
+            ByteArrayResource resource = new ByteArrayResource(json.getBytes(StandardCharsets.UTF_8));
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=customer-" + id + ".json")
+                    .body(resource);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 }

@@ -33,4 +33,5 @@ public interface LeadService {
     public void deleteAllByCustomer(Customer customer);
 
     LeadsByEmploye leadsByEmployee();
+    List<Lead> getLeadByCustomerId(Customer customer);
 }

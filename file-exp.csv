@@ -1,0 +1,21 @@
+#Feuille customer
+customer_email,customer_name
+dupmathissusan@hotmail.com,Michelle Orr
+#Feuille ticket_lead
+customer_email,subject_or_name,type,status,expense
+dupmathissusan@hotmail.com,Leverage end-to-end action-items,ticket,open,"4233.12"
+dupmathissusan@hotmail.com,Seize intuitive paradigms,ticket,open,"8354.8"
+dupmathissusan@hotmail.com,Revolutionize b2c web-readiness,ticket,open,"525.47"
+dupmathissusan@hotmail.com,Evolve robust partnerships,ticket,open,"3826.25"
+dupmathissusan@hotmail.com,Seize collaborative interfaces,ticket,open,"7842.68"
+dupmathissusan@hotmail.com,Re-intermediate clicks-and-mortar niches,ticket,open,"6433.08"
+dupmathissusan@hotmail.com,Morph proactive deliverables,lead,meeting-to-schedule,"7929.32"
+dupmathissusan@hotmail.com,Reinvent ubiquitous initiatives,lead,meeting-to-schedule,"3161.59"
+dupmathissusan@hotmail.com,Engineer viral technologies,lead,meeting-to-schedule,"7753.53"
+dupmathissusan@hotmail.com,Whiteboard vertical initiatives,lead,meeting-to-schedule,"3388.69"
+dupmathissusan@hotmail.com,Redefine viral systems,lead,meeting-to-schedule,"7172.32"
+dupmathissusan@hotmail.com,Seize integrated e-commerce,lead,meeting-to-schedule,"1245.05"
+dupmathissusan@hotmail.com,Evolve viral relationships,lead,meeting-to-schedule,"4156.29"
+#Feuille budget
+customer_email,Budget
+dupmathissusan@hotmail.com,84836.75

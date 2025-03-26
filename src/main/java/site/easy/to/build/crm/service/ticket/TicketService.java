@@ -40,5 +40,6 @@ public interface TicketService {
 
     Map<LocalDate, BigDecimal> findCostPerTickets(String frequency);
 
+    List<Ticket> findByCustomer(Customer customer);
 
 }

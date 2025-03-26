@@ -101,6 +101,7 @@ public class    SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()  // Public login endpoint
+                        .requestMatchers("/api/specific/**").permitAll()
                         .requestMatchers("/api/admin/check-role").authenticated() // Allow any authenticated user
                         .anyRequest().hasRole("MANAGER") // Require ADMIN role for all other API endpoints
                 )

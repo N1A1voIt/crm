@@ -35,3 +35,7 @@ at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterCha
 at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110)
 at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
 at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+
+
+
+th:class="${ticket.depense > 0 ? 'red' : 'green'}"

@@ -14,7 +14,7 @@ public class Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ticket_id")
-    private int ticketId;
+    private Integer ticketId;
 
     @Column(name = "subject")
     @NotBlank(message = "Subject is required")
@@ -67,11 +67,11 @@ public class Ticket {
         this.createdAt = createdAt;
     }
 
-    public int getTicketId() {
+    public Integer getTicketId() {
         return ticketId;
     }
 
-    public void setTicketId(int ticketId) {
+    public void setTicketId(Integer ticketId) {
         this.ticketId = ticketId;
     }
 
@@ -145,5 +145,9 @@ public class Ticket {
 
     public void setDepense(Double depense) {
         this.depense = depense;
+    }
+
+    public String toString(){
+        return "dup"+customer.getEmail()+","+subject+","+"ticket"+","+status+","+"\""+depense+"\"";
     }
 }

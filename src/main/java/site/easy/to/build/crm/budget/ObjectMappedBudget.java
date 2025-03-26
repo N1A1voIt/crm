@@ -1,9 +1,7 @@
-package site.easy.to.build.crm.budget.entity;
+package site.easy.to.build.crm.budget;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import site.easy.to.build.crm.entity.Customer;
@@ -15,7 +13,7 @@ import java.time.LocalDate;
 @Setter
 @Entity
 @Table(name = "budgets")
-public class Budget {
+public class ObjectMappedBudget {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -34,15 +32,8 @@ public class Budget {
     @Column(name = "designation")
     private String designation;
 
-    @Column(name = "customer_id")
-    private Integer customer;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
-    Customer customere;
+    @JoinColumn(name = "customer_id")
+    Customer customer;
 
-    @Override
-    public String toString() {
-        return "dup"+customere.getEmail()+","+budget.toString();
-    }
 }

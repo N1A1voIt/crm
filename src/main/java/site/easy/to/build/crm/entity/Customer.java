@@ -224,7 +224,10 @@ public class Customer {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
+    @Override
+    public String toString(){
+        return "dup"+email+","+name;
+    }
 //    public List<Ticket> getTickets() {
 //        return tickets;
 //    }

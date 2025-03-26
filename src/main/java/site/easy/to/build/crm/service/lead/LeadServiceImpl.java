@@ -117,6 +117,11 @@ public class LeadServiceImpl implements LeadService {
     }
 
     @Override
+    public List<Lead> getLeadByCustomerId(Customer customer) {
+        return leadRepository.findByCustomerCustomerId(customer.getCustomerId());
+    }
+
+    @Override
     public List<Lead> getRecentLeads(int managerId, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         return leadRepository.findByManagerIdOrderByCreatedAtDesc(managerId, pageable);

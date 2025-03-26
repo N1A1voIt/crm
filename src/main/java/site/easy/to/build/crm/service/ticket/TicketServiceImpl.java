@@ -151,6 +151,11 @@ public class TicketServiceImpl implements TicketService{
         return costPerTicketMap;
     }
 
+    @Override
+    public List<Ticket> findByCustomer(Customer customer) {
+        return ticketRepository.findByCustomerCustomerId(customer.getCustomerId());
+    }
+
     private LocalDate adjustDate(LocalDate date, String frequency) {
         switch (frequency) {
             case "DAILY":

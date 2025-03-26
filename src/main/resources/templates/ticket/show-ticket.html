@@ -95,7 +95,7 @@
                                 </div>
                                 <div class="col-md-4 col-xs-6"> <strong>Expens</strong>
                                     <br>
-                                    <p class="text-muted" th:text="${ticket.depense}"></p>
+                                    <p class="text-muted" th:class="${ticket.depense > 0 ? 'red' :  'green'}" th:text="${ticket.depense}"></p>
                                 </div>
                             </div>
                             <hr>
