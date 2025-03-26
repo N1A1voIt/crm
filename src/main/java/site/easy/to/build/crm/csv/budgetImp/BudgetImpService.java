@@ -16,6 +16,9 @@ public class BudgetImpService {
     private Faker faker = new Faker();
     public Budget getBudgets(BudgetImp budgetImp, TicketLeadArgs ticketLeadArgs) {
         Budget budget = new Budget();
+        if(ticketLeadArgs.getCustomers().get(budgetImp.getCustomerEmail()) == null){
+            throw new RuntimeException("Customer not found (email)");
+        }
         budget.setCustomer(ticketLeadArgs.getCustomers().get(budgetImp.getCustomerEmail()).getCustomerId());
         budget.setBudget(budgetImp.getBudget());
         budget.setDesignation(faker.lorem().word());

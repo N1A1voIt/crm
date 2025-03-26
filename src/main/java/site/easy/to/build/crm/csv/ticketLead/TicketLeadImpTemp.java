@@ -2,6 +2,7 @@ package site.easy.to.build.crm.csv.ticketLead;
 
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvNumber;
 import com.opencsv.bean.CsvNumbers;
 import jakarta.persistence.*;
@@ -31,11 +32,14 @@ public class TicketLeadImpTemp implements Validatable {
     @NotNull
     @Column(name = "customer_email", nullable = false, length = 250)
     @CsvBindByName(column = "customer_email")
+    @CsvBindByPosition(position = 0)
     private String customerEmail;
 
     @Size(max = 250)
     @Column(name = "subject_or_name", length = 250)
     @CsvBindByName(column = "subject_or_name")
+    @CsvBindByPosition(position = 1)
+
     private String subjectOrName;
 
     @Size(max = 250)
@@ -43,16 +47,20 @@ public class TicketLeadImpTemp implements Validatable {
     @Column(name = "type", nullable = false, length = 250)
     @Pattern(regexp = "^(ticket|lead)",message = "Needs to be a ticket or a lead")
     @CsvBindByName(column = "type")
+    @CsvBindByPosition(position = 2)
+
     private String type;
 
     @Size(max = 250)
     @Column(name = "status", length = 250)
     @CsvBindByName(column = "status")
+    @CsvBindByPosition(position = 3)
     @Pattern(regexp = "^(meeting-to-schedule|scheduled|archived|success|assign-to-sales|open|assigned|on-hold|in-progress|resolved|closed|reopened|pending-customer-response|escalated)$", message = "Invalid status")
     private String status;
 
     @NotNull
     @Column(name = "expense", nullable = false, precision = 18, scale = 2)
+    @CsvBindByPosition(position = 4)
     @CsvNumber("#,##")
 //    @CsvNumbers(value = {})
 //    @CsvNumbers({
@@ -102,18 +110,19 @@ public class TicketLeadImpTemp implements Validatable {
         }
         if (!type.equals("ticket") && !type.equals("lead")) {
             messages.add("Type must be ticket or lead");
-        }if (status == null || status.isEmpty()) {
-            messages.add("status is null or empty");
-        } if (!statusIn("meeting-to-schedule,scheduled,archived,success,assign-to-sales,open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated")){
-            messages.add("Status must be either meeting-to-schedule,scheduled,archived,success,assign-to-sales,open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated");
-        } if(type != null && !type.isEmpty()){
-            if(type.equals("ticket") && !statusIn("open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated,archived")){
-                messages.add("Status must be either open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated,archived for a ticket type");
-            }
-            if (type.equals("lead") && !statusIn("meeting-to-schedule,scheduled,archived,success,assign-to-sales")){
-                messages.add("Status must be either meeting-to-schedule,scheduled,archived,success,assign-to-sales for a lead type");
-            }
         }
+//        if (status == null || status.isEmpty()) {
+//            messages.add("status is null or empty");
+//        } if (!statusIn("meeting-to-schedule,scheduled,archived,success,assign-to-sales,open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated")){
+//            messages.add("Status must be either meeting-to-schedule,scheduled,archived,success,assign-to-sales,open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated");
+//        } if(type != null && !type.isEmpty()){
+//            if(type.equals("ticket") && !statusIn("open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated,archived")){
+//                messages.add("Status must be either open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated,archived for a ticket type");
+//            }
+//            if (type.equals("lead") && !statusIn("meeting-to-schedule,scheduled,archived,success,assign-to-sales")){
+//                messages.add("Status must be either meeting-to-schedule,scheduled,archived,success,assign-to-sales for a lead type");
+//            }
+//        }
         if (expense == null) {
             messages.add("expense is null or empty");
         }if (expense != null && expense < 0) {

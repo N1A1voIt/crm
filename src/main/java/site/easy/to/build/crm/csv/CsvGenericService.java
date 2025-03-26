@@ -35,7 +35,6 @@ import java.util.List;
 
 @Service
 @Transactional
-
 public class CsvGenericService {
     @Autowired
     ImportTicketLead importTicketLead;
@@ -100,6 +99,8 @@ public class CsvGenericService {
         return errors;
     }
     public void saveEntities(User user) {
+        String err = "";
+        List<String> errors = new ArrayList<>();
         try{
             List<TicketLeadImp> ticketLeadImps = em.createNativeQuery("SELECT * FROM ticket_lead_imp",TicketLeadImp.class).getResultList();
             List<CustomerImp> customers = em.createNativeQuery("SELECT * FROM customer_imp",CustomerImp.class).getResultList();
@@ -109,15 +110,37 @@ public class CsvGenericService {
                 em.persist(customer);
             }
             TicketLeadArgs ticketLeadArgs = this.ticketLeadArgs(user);
+            int l = 1;
             for (TicketLeadImp ticketLeadImp : ticketLeadImps) {
-                Object a = ticketLeadService.generateTicketOrLead(ticketLeadImp,ticketLeadArgs);
-                em.persist(a);
+                try{
+                    Object a = ticketLeadService.generateTicketOrLead(ticketLeadImp,ticketLeadArgs);
+                    em.persist(a);
+                }catch (Exception e){
+                    errors.add("Error on line in ticketLead file:"+l+":"+e.getMessage()+"\n");
+//                    throw new RuntimeException("Error on line in ticketLead file:"+l+":"+e.getMessage());
+                }finally {
+                    l++;
+                }
             }
+            l=1;
             for (BudgetImp budgetImp : budgetImps) {
-                Budget a = budgetImpService.getBudgets(budgetImp,ticketLeadArgs);
-                em.persist(a);
+               try{
+                   Budget a = budgetImpService.getBudgets(budgetImp,ticketLeadArgs);
+                    em.persist(a);
+                }catch (Exception e){
+                   errors.add("Error on line in budget file:"+l+":"+e.getMessage()+"\n");
+//                   throw new RuntimeException("Error on line in Budget file:"+l+":"+e.getMessage());
+                }finally {
+                    l++;
+                }
             }
-        } catch (Exception e){
+            if (errors.size() > 0) {
+                throw new CSVProcessingException("CSV errors", errors);
+            }
+        }catch (CSVProcessingException e){
+            throw e;
+        }
+        catch (Exception e){
             System.out.println(e.getMessage());
 //            cleanUpService.cleanupImport();
             throw e;

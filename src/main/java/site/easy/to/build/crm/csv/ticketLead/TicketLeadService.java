@@ -22,13 +22,17 @@ public class TicketLeadService {
     private Ticket toTicket(TicketLeadImp ticketLead,TicketLeadArgs ticketLeadArgs) {
         Ticket ticket = new Ticket();
         ticket.setSubject(ticketLead.getSubjectOrName());
-        ticket.setStatus(ticketLead.getStatus());
+//        ticket.setStatus(ticketLead.getStatus());
+        ticket.setStatus("open");
         ticket.setDepense(ticketLead.getExpense());
         ticket.setDescription(faker.leagueOfLegends().quote());
         ticket.setPriority(ticketLeadArgs.getPriorities()[faker.number().numberBetween(0,ticketLeadArgs.getPriorities().length-1)]);
         ticket.setManager(ticketLeadArgs.getUser());
         ticket.setEmployee(ticketLeadArgs.getEmployee().get(faker.number().numberBetween(0,ticketLeadArgs.getEmployee().size()-1)));
         Customer customer = ticketLeadArgs.getCustomers().get(ticketLead.getCustomerEmail());
+        if(customer == null) {
+            throw new RuntimeException("Customer not found (email)");
+        }
         ticket.setCustomer(customer);
         ticket.setCreatedAt(dataGenerationService.generateRandomDateLogically(customer.getCreatedAt()));
         return ticket;
@@ -36,11 +40,16 @@ public class TicketLeadService {
     private Lead toLead(TicketLeadImp ticketLead, TicketLeadArgs ticketLeadArgs) {
         Lead lead = new Lead();
         lead.setName(ticketLead.getSubjectOrName());
-        lead.setStatus(ticketLead.getStatus());
+//        lead.setStatus(ticketLead.getStatus());
+        lead.setStatus("meeting-to-schedule");
+
         lead.setDepense(ticketLead.getExpense());
         lead.setManager(ticketLeadArgs.getUser());
         lead.setEmployee(ticketLeadArgs.getEmployee().get(faker.number().numberBetween(0,ticketLeadArgs.getEmployee().size()-1)));
         Customer customer = ticketLeadArgs.getCustomers().get(ticketLead.getCustomerEmail());
+        if(customer == null) {
+            throw new RuntimeException("Customer not found (email)");
+        }
         lead.setCustomer(customer);
         lead.setCreatedAt(dataGenerationService.generateRandomDateLogically(customer.getCreatedAt()));
         return lead;
