@@ -2,6 +2,7 @@ package site.easy.to.build.crm.budget.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,7 @@ public class Budget {
     private Integer id;
 
     @Column(name = "budget")
+    @Positive(message = "Budget must be positive")
     private BigDecimal budget;
 
     @Column(name = "date_min")

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -342,6 +343,7 @@ public class TicketController {
         ticket.setCustomer(customer);
         ticket.setManager(manager);
         ticket.setEmployee(employee);
+        ticket.setCreatedAt(previousTicket.getCreatedAt());
         Ticket currentTicket = ticketService.save(ticket);
 
         List<String> properties = DatabaseUtil.getColumnNames(entityManager, Ticket.class);
@@ -390,7 +392,7 @@ public class TicketController {
             TicketEmailSettings ticketEmailSettings = ticketEmailSettingsService.findByUserId(userId);
 
             CustomerLoginInfo customerLoginInfo = customer.getCustomerLoginInfo();
-            TicketEmailSettings customerTicketEmailSettings = ticketEmailSettingsService.findByCustomerId(customerLoginInfo.getId());
+            TicketEmailSettings customerTicketEmailSettings = ticketEmailSettingsService.findByCustomerId(customerLoginInfo != null ? customerLoginInfo.getId() : -100);
 
             if (ticketEmailSettings != null) {
                 String getterMethodName = "get" + StringUtils.capitalizeFirstLetter(propertyName);

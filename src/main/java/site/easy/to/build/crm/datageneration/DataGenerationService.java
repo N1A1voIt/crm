@@ -90,11 +90,8 @@ public class DataGenerationService {
         return randomDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
     public LocalDateTime generateRandomDateLogically(LocalDateTime localDateTime) {
-        faker.date().future(365,TimeUnit.DAYS,Date.from(localDateTime.toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-        long currentTime = System.currentTimeMillis();
-        long yearInMillis = TimeUnit.DAYS.toMillis(365);
-        long randomTime = currentTime - faker.random().nextLong(yearInMillis);
-        Date randomDate = new Date(randomTime);
+        Date referenceDate = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        Date randomDate = faker.date().future(365, TimeUnit.DAYS, referenceDate);
         return randomDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 

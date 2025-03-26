@@ -474,7 +474,7 @@ public class ContractController {
 
             ContractEmailSettings contractEmailSettings = contractEmailSettingsService.findByUserId(userId);
             CustomerLoginInfo customerLoginInfo = customer.getCustomerLoginInfo();
-            ContractEmailSettings customerContractEmailSettings = contractEmailSettingsService.findByCustomerId(customerLoginInfo.getId());
+            ContractEmailSettings customerContractEmailSettings = contractEmailSettingsService.findByCustomerId(customerLoginInfo !=null ? customerLoginInfo.getId() : -100);
             if (contractEmailSettings != null) {
                 String getterMethodName = "get" + StringUtils.capitalizeFirstLetter(propertyName);
                 Method getterMethod = ContractEmailSettings.class.getMethod(getterMethodName);

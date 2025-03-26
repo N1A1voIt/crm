@@ -104,11 +104,19 @@ public class TicketLeadImpTemp implements Validatable {
             messages.add("Type must be ticket or lead");
         }if (status == null || status.isEmpty()) {
             messages.add("status is null or empty");
-        }if (!statusIn("meeting-to-schedule,scheduled,archived,success,assign-to-sales,open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated")){
+        } if (!statusIn("meeting-to-schedule,scheduled,archived,success,assign-to-sales,open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated")){
             messages.add("Status must be either meeting-to-schedule,scheduled,archived,success,assign-to-sales,open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated");
-        }if (expense == null) {
+        } if(type != null && !type.isEmpty()){
+            if(type.equals("ticket") && !statusIn("open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated,archived")){
+                messages.add("Status must be either open,assigned,on-hold,in-progress,resolved,closed,reopened,pending-customer-response,escalated,archived for a ticket type");
+            }
+            if (type.equals("lead") && !statusIn("meeting-to-schedule,scheduled,archived,success,assign-to-sales")){
+                messages.add("Status must be either meeting-to-schedule,scheduled,archived,success,assign-to-sales for a lead type");
+            }
+        }
+        if (expense == null) {
             messages.add("expense is null or empty");
-        }if (expense < 0) {
+        }if (expense != null && expense < 0) {
             messages.add("expense is negative");
         }
         invalidRowException.setInvalidDesc(messages);
@@ -122,5 +130,17 @@ public class TicketLeadImpTemp implements Validatable {
             if (s.equals(status)) statuse = true;
         }
         return statuse;
+    }
+
+    @Override
+    public String toString() {
+        return "TicketLeadImpTemp{" +
+                "id=" + id +
+                ", customerEmail='" + customerEmail + '\'' +
+                ", subjectOrName='" + subjectOrName + '\'' +
+                ", type='" + type + '\'' +
+                ", status='" + status + '\'' +
+                ", expense=" + expense +
+                '}';
     }
 }

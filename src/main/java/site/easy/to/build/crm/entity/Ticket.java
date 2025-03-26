@@ -3,6 +3,7 @@ package site.easy.to.build.crm.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import org.hibernate.mapping.ToOne;
 
 import java.time.LocalDateTime;
@@ -49,6 +50,7 @@ public class Ticket {
     private LocalDateTime createdAt;
 
     @Column(name = "depense")
+    @Positive(message = "Expens should be positive")
     private Double depense;
 
     public Ticket() {

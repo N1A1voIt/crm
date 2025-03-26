@@ -3,6 +3,7 @@ package site.easy.to.build.crm.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -61,6 +62,7 @@ public class Lead {
     private LocalDateTime createdAt;
 
     @Column(name = "depense")
+    @Positive(message = "Expens should be positive")
     private Double depense;
 
     public Lead() {

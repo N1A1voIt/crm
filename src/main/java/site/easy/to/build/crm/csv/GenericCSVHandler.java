@@ -53,7 +53,8 @@ public class GenericCSVHandler<T extends Validatable, R> {
         CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(new InputStreamReader(file.getInputStream()))
                 .withType(tempEntityClass)
                 .build();
-        return new ArrayList<>(new HashSet<>(csvToBean.parse()));
+//        new ArrayList<>(new HashSet<>(csvToBean.parse()));
+        return csvToBean.parse();
     }
 
 
@@ -97,6 +98,7 @@ public class GenericCSVHandler<T extends Validatable, R> {
 
         for (int i = 0; i < tempEntities.size(); i++) {
             T entity = tempEntities.get(i);
+            System.out.println(entity.toString());
             try {
                 entity.isInvalid();
                 if (entity.isValid()) {
@@ -105,16 +107,16 @@ public class GenericCSVHandler<T extends Validatable, R> {
             } catch (InvalidRowException e) {
                 List<String> messages = e.getInvalidDesc();
                 for (String message : messages) {
-                    exceptions.add("Error on line " + (i + 1) + " in the file: " + file.getOriginalFilename() + ": " + message);
+                    exceptions.add("Error on line " + (i + 2) + " in the file: " + file.getOriginalFilename() + ": " + message);
                 }
             }
             catch (ConstraintViolationException e){
                 e.printStackTrace();
-                exceptions.add("Error on line " + (i + 1) + " in the file: " + file.getOriginalFilename() + ": " + e.getCause().getMessage());
+                exceptions.add("Error on line " + (i + 2) + " in the file: " + file.getOriginalFilename() + ": " + e.getCause().getMessage());
                 em.clear();
             }catch (Exception e) {
                 e.printStackTrace();
-                exceptions.add("Error on line " + (i + 1) + " in the file: " + file.getOriginalFilename() + ": " + e.getCause().getMessage());
+                exceptions.add("Error on line " + (i + 2) + " in the file: " + file.getOriginalFilename() + ": " + e.getCause().getMessage());
                 em.clear();
             }
         }
@@ -128,6 +130,7 @@ public class GenericCSVHandler<T extends Validatable, R> {
     public List<Exception> importCSV(MultipartFile file) throws IOException {
         System.out.println(file.getOriginalFilename());
         createTemporaryTable();
+
         try {
             CsvTempResult<T> result = controlCSV(file);
             for (T tempEntity : result.rows) {
@@ -138,7 +141,7 @@ public class GenericCSVHandler<T extends Validatable, R> {
         } catch (CSVProcessingException e) {
             throw new IOException("CSV processing failed", e);
         } catch (CsvDataTypeMismatchException e) {
-            throw new RuntimeException("Unexpected error during CSV import (insertion on main tables)", e);
+            throw new RuntimeException("Unexpected error during CSV import (Fetching CSV informations)", e);
         }  catch (Exception e) {
             throw new RuntimeException("Unexpected error during CSV import (insertion on main tables)", e);
         } finally {
