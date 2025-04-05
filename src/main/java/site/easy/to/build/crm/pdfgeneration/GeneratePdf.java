@@ -28,14 +28,22 @@ public class GeneratePdf<T>  {
                 Field[] fields = entityList.get(0).getClass().getDeclaredFields();
                 PdfPTable table = new PdfPTable(fields.length);
                 for (Field field : fields) {
-                    table.addCell(new PdfPCell(new Paragraph(field.getName())));
+                    if(field.isAnnotationPresent(PDFHeader.class)){
+                        if (!field.getAnnotation(PDFHeader.class).activate()) continue;
+                        table.addCell(new PdfPCell(new Paragraph(field.getAnnotation(PDFHeader.class).value())));
+                    }else{
+                        table.addCell(new PdfPCell(new Paragraph(field.getName())));
+                    }
                 }
 
                 for (T entity : entityList) {
                     for (Field field : fields) {
                         field.setAccessible(true);
-                        Object value = field.get(entity);
-                        table.addCell(value != null ? value.toString() : "");
+                        if (field.isAnnotationPresent(PDFHeader.class)) {
+                            if (!field.getAnnotation(PDFHeader.class).activate()) continue;
+                            Object value = field.get(entity);
+                            table.addCell(value != null ? value.toString() : "");
+                        }
                     }
                 }
                 document.add(table);

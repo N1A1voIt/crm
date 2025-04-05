@@ -18,6 +18,7 @@ public class DashboardItem {
     LeadsByEmploye leadsByEmploye;
     Total total;
 
+
     @JsonProperty("totalBudget")
     double getTotalBudget(){
         double total = 0;

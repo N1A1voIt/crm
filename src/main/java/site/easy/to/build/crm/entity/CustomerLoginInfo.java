@@ -2,6 +2,7 @@ package site.easy.to.build.crm.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import site.easy.to.build.crm.pdfgeneration.PDFHeader;
 
 @Entity
 @Table(name = "customer_login_info")
@@ -10,20 +11,25 @@ public class CustomerLoginInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @PDFHeader(activate = false)
     private Integer id;
-
+    @PDFHeader(activate = true,value = "Username")
     @Column(name = "username")
     private String username;
 
+    @PDFHeader(activate = true,value = "Password")
     @Column(name = "password")
     private String password;
 
+    @PDFHeader(activate = false,value = "Username")
     @Column(name = "token")
     private String token;
 
+    @PDFHeader(activate = true,value = "Password set")
     @Column(name = "password_set")
     private Boolean passwordSet;
 
+    @PDFHeader(activate = false,value = "Username")
     @OneToOne(mappedBy = "customerLoginInfo", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("customerLoginInfo")
     @PrimaryKeyJoinColumn

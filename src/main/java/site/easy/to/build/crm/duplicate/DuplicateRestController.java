@@ -19,8 +19,8 @@ public class DuplicateRestController {
     DuplicateService duplicateService;
     @Autowired
     UserService userService;
-    @PostMapping("/api/specific/duplicate/import")
 
+    @PostMapping("/api/specific/duplicate/import")
     public ResponseEntity<?> importData(@RequestParam("file") MultipartFile file) {
         try {
             duplicateService.importJSON(file);

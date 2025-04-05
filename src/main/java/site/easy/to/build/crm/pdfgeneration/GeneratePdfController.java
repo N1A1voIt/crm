@@ -13,6 +13,7 @@ public class GeneratePdfController {
     GeneratePdf<CustomerLoginInfo> generatePdf;
     @Autowired
     CustomerLoginInfoRepository customerLoginInfoService;
+
     @GetMapping("/employee/customer-login-pdf")
     public String employeeLogin() {
         generatePdf.exportToPDF(customerLoginInfoService.findAll(),"customer-login.pdf");
